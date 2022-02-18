@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">RecordVoiceApp</string>
+    <string name="fan_off">off</string>
+    <string name="fan_low">1</string>
+    <string name="fan_medium">2</string>
+    <string name="fan_high">3</string>
+    <string name="start_clock">00:00</string>
+    <string name="recordings">Recordings</string>
+
+
+    <string-array name="actions_recordings">
+        <item>Share</item>
+        <item>Delete</item>
+    </string-array>
+
+</resources>

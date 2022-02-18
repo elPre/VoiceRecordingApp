@@ -1,0 +1,12 @@
+package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.pojos
+
+data class RecordAudio(
+    val name: String,
+    val time: String,
+    val duration: String,
+    val action: RecordFileAction? = null)
+
+enum class RecordFileAction {
+    SHARE,
+    DELETE
+}
