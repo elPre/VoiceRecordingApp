@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <com.holv.apps.recordvoiceapp.recordUseCase.customview.InfiniteLooper
+        android:id="@+id/lopperCustomView"
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <pl.droidsonroids.gif.GifImageView
+        android:id="@+id/imGifImage"
+        android:layout_width="300dp"
+        android:layout_height="130dp"
+        android:visibility="gone"
+        android:src="@drawable/infinity_loop_animation_cinema4d_loop"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/lopperCustomView" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
