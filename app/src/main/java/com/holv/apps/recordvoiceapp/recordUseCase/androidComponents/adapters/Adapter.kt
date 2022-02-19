@@ -50,7 +50,7 @@ class Adapter(
                 parent.inflater,
                 parent,
                 false
-            ), action
+            ), action, ::getItem
         )
     } as BaseRecordViewHolder<RecordItem>
 

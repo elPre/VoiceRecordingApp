@@ -9,8 +9,8 @@
 
 
     <string-array name="actions_recordings">
-        <item>Share</item>
-        <item>Delete</item>
+        <item>share</item>
+        <item>delete</item>
     </string-array>
 
 </resources>

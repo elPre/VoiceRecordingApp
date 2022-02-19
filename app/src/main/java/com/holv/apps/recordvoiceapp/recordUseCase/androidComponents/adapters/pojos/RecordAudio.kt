@@ -7,6 +7,7 @@ data class RecordAudio(
     val action: RecordFileAction? = null)
 
 enum class RecordFileAction {
+    NO_SELECTION,
     SHARE,
     DELETE
 }
