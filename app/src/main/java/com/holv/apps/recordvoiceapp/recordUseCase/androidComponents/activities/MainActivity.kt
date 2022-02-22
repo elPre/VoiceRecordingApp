@@ -22,9 +22,20 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private fun openFragment(fragment: Fragment, tag: String) {
         supportFragmentManager
             .beginTransaction()
-            .replace(R.id.fragment_container, fragment)
+            .add(R.id.fragment_container, fragment)
             .addToBackStack(tag).commit()
     }
 
+    override fun onBackPressed() {
+        if (supportFragmentManager.backStackEntryCount == ONE_FRAGMENT
+            && supportFragmentManager.fragments[0] is RecordFragment)
+            finish()
+        else
+            super.onBackPressed()
+    }
+
+    companion object {
+        private const val ONE_FRAGMENT = 1
+    }
 }
 
