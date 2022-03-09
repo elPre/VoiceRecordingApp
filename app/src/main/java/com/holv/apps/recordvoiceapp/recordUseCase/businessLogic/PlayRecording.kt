@@ -7,7 +7,9 @@ interface PlayRecording: Playback,
     StopPlayback,
     PausePlayback,
     SetListenerDuration,
-    SetListenerSeconds
+    SetListenerSeconds,
+    GetAudioCurrentTime,
+    SeekToSpecificPosition
 
 interface Playback {
     fun playRecording(infoRecording: InfoRecording)
@@ -27,4 +29,12 @@ interface SetListenerDuration {
 
 interface SetListenerSeconds {
     fun setListenerSeconds(secondsDuration: SetCountTimeFromAudioDuration)
+}
+
+interface GetAudioCurrentTime {
+    fun onGetAudioCurrentTime(): Int
+}
+
+interface SeekToSpecificPosition {
+    fun onSeekToSpecificPos(pos: Int)
 }

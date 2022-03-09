@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,6 +23,7 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>() {
     private val viewModel: RecordViewModel by viewModels {
         RecordViewModel.Factory(requireContext().applicationContext as Application)
     }
+    private var isListenerReadyForUpdateTickClock = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,14 +99,26 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>() {
                 viewModel.pausePlayback()
             }
             is Events.PlayRecordedAudio -> {
+                viewModel.animationOnOff(true)
                 viewModel.startPlaybackFromRecordings(event.recordAudio)
             }
+            is Events.SeekBarAudio -> {
+                Log.d("RecordFragment", "this is  the pos  to seekto  ${event.pos}")
+                viewModel.setSeekBarPos(event.pos)
+            }
+            is Events.SeekBarReflectOnTimer -> {
+                if (isListenerReadyForUpdateTickClock) {
+                    viewModel.setSeekBarPosUpdateTimer(event.pos)
+                }
+            }
+
         }
     }
 
     private fun setListenersForHolder() {
         Handler(Looper.myLooper()!!).postDelayed(({
             viewModel.setListenerForHolders(binding.recordRv)
+            isListenerReadyForUpdateTickClock = true
         }), ONE_SEC)
 
     }

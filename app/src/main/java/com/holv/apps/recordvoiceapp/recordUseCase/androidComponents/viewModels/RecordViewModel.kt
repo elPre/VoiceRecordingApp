@@ -16,6 +16,7 @@ import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.Fire
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.ObtainHolderForActionEvent
 import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.*
 import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.RecordType
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -54,7 +55,6 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer {
 
     override fun setCountUpTimer(sec: Int) {
         totalSecondsToPlayback = sec.toLong()
-        clockTickTime()
     }
 
     fun loadPage(isNewFragment: Boolean) = viewModelScope.launch {
@@ -125,6 +125,7 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer {
             playAudio.setListenerSeconds(this@RecordViewModel)
             playAudio.playRecording(InfoRecording(""))
             isPlaying.set(true)
+            getAudioCurrentSeconds()
         }
     }
 
@@ -140,6 +141,14 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer {
             playAudio.setListenerSeconds(this@RecordViewModel)
             playAudio.playRecording(InfoRecording(playbackData.playbackFile))
             isPlaying.set(true)
+            getAudioCurrentSeconds()
+        }
+    }
+
+    private fun getAudioCurrentSeconds() = viewModelScope.launch {
+        while (isPlaying.get()) {
+            listener.updateSeekBar(playAudio.onGetAudioCurrentTime())
+            delay(HALF_SECOND)
         }
     }
 
@@ -153,28 +162,103 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer {
         minutes.set(0)
         hours.set(0)
         listener.onClockTick("00:00")
-        countDownTimer.cancel()
     }
 
     fun finishPlayback() = viewModelScope.launch {
         isPlaying.set(false)
         playAudio.stopPlayBack()
-        seconds.set(0)
-        timeHolder.set(0)
-        minutes.set(0)
-        hours.set(0)
+        resetTimerVariables()
         listener.onClockTick("00:00")
     }
 
     fun pausePlayback() = viewModelScope.launch {
         playAudio.pausePlayback()
-        countDownTimer.cancel()
         isPlaying.set(false)
         isPlaybackPause.set(true)
     }
 
-    private fun clockTickTime() = viewModelScope.launch {
-        countDownTimer.start()
+
+    fun setSeekBarPos(pos: Int) = viewModelScope.launch {
+        playAudio.onSeekToSpecificPos(pos)
+        listener.updateSeekBar(pos)
+        resetTimerVariables()
+        val isMoreThanHour = pos >= 3600
+        if (isMoreThanHour) {
+            val hr = pos / ONE_HOUR_IN_SECS
+            val tmpMis = pos % ONE_HOUR_IN_SECS
+            val mins = tmpMis / 60
+            val sec = tmpMis % 60
+            seconds.set(sec.toLong())
+            minutes.set(mins.toLong())
+            hours.set(hr.toLong())
+        } else {
+            val mins = pos / 60
+            val sec = pos % 60
+            seconds.set(sec.toLong())
+            minutes.set(mins.toLong())
+        }
+    }
+
+    fun setSeekBarPosUpdateTimer(pos: Int) = viewModelScope.launch {
+        var showTimer = ""
+        val isMoreThanHour = pos >= 3600
+        if (isMoreThanHour) {
+            val hr = pos / ONE_HOUR_IN_SECS
+            val tmpMis = pos % ONE_HOUR_IN_SECS
+            val mins = tmpMis / 60
+            val sec = tmpMis % 60
+            Log.d("RecordViewModel","$hr:$mins:$sec")
+            val secs = if (sec > 9) "$sec" else "0$sec"
+            val min = if (mins > 9) "$mins" else "0$mins"
+            val hrs = if (hr > 9) "$hr" else "0$hr"
+            showTimer = "$hrs:$min:$secs"
+        } else {
+            val mins = pos / 60
+            val sec = pos % 60
+            Log.d("RecordViewModel","$mins:$sec")
+            val secs = if (sec > 9) "$sec" else "0$sec"
+            val min = if (mins > 9) "$mins" else "0$mins"
+            showTimer = "$min:$secs"
+        }
+        listener.onClockTick(showTimer)
+        if(pos >= totalSecondsToPlayback) {
+            fireAnimationListener.onFireAnimation(false)
+            listener.onFinishPlayback()
+            isPlaying.set(false)
+            playAudio.stopPlayBack()
+            resetTimerVariables()
+        }
+    }
+
+    fun setListenerForHolders(recyclerView: RecyclerView) = viewModelScope.launch {
+
+        val itemCount = recyclerView.adapter?.itemCount
+
+        if (itemCount != null && itemCount > 0) {
+
+            val animationListener = recyclerView.findViewHolderForAdapterPosition(ANIMATION_HOLDER)
+            val userControlsListener = recyclerView.findViewHolderForAdapterPosition(USER_CONTROLS_HOLDER)
+
+            if (animationListener is FireAnimation) {
+                fireAnimationListener = animationListener
+            }
+
+            if (userControlsListener is ObtainHolderForActionEvent) {
+                playAudio.setListener(userControlsListener)
+                listener = userControlsListener
+            }
+        }
+    }
+
+    fun animationOnOff(onOff: Boolean) = viewModelScope.launch {
+        fireAnimationListener.onFireAnimation(onOff)
+    }
+
+    private fun resetTimerVariables() {
+        seconds.set(0)
+        timeHolder.set(0)
+        minutes.set(0)
+        hours.set(0)
     }
 
     private val countDownTimer =
@@ -215,10 +299,8 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer {
                     }
 
                     if (hours.get() > 0) {
-                        //Log.d("RecordViewModel","$hrs:$min:$secs")
                         listener.onClockTick("$hrs:$min:$secs")
                     } else {
-                        //Log.d("RecordViewModel","$min:$secs")
                         listener.onClockTick("$min:$secs")
                     }
                     timeHolder.incrementAndGet()
@@ -232,30 +314,6 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer {
 
         }
 
-    fun setListenerForHolders(recyclerView: RecyclerView) = viewModelScope.launch {
-
-        val itemCount = recyclerView.adapter?.itemCount
-
-        if (itemCount != null && itemCount > 0) {
-
-            val animationListener = recyclerView.findViewHolderForAdapterPosition(ANIMATION_HOLDER)
-            val userControlsListener = recyclerView.findViewHolderForAdapterPosition(USER_CONTROLS_HOLDER)
-
-            if (animationListener is FireAnimation) {
-                fireAnimationListener = animationListener
-            }
-
-            if (userControlsListener is ObtainHolderForActionEvent) {
-                playAudio.setListener(userControlsListener)
-                listener = userControlsListener
-            }
-        }
-    }
-
-    fun animationOnOff(onOff: Boolean) = viewModelScope.launch {
-        fireAnimationListener.onFireAnimation(onOff)
-    }
-
     class Factory(private val app: Application) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
@@ -266,6 +324,8 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer {
     companion object {
         private const val ANIMATION_HOLDER = 1
         private const val USER_CONTROLS_HOLDER = 2
+        private const val HALF_SECOND = 500L
+        private const val ONE_HOUR_IN_SECS = 3600
     }
 
 }

@@ -80,6 +80,15 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
         this.listenerCountUpTime = secondsDuration
     }
 
+    override fun onGetAudioCurrentTime(): Int {
+        return player?.currentSeconds ?: 0
+    }
+
+    override fun onSeekToSpecificPos(pos: Int) {
+        Log.e("PlayAudio", "new pos to seekTo = $pos")
+        player?.seekTo(pos * 1000)
+    }
+
     private fun timeInString(seconds: Int): String {
         return String.format(
             "%02d:%02d",

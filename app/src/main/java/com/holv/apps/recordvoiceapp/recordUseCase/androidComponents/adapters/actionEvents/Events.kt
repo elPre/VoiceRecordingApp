@@ -9,4 +9,6 @@ sealed class Events {
     object Play : Events()
     object PausePlayback : Events()
     data class PlayRecordedAudio (val recordAudio: RecordAudio) : Events()
+    data class SeekBarAudio(val pos: Int) : Events()
+    data class SeekBarReflectOnTimer(val pos: Int) : Events()
 }
