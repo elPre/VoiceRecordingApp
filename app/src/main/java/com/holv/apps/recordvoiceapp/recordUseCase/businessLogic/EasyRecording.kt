@@ -1,9 +1,19 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.businessLogic
 
-interface EasyRecording : StartRecording, StopRecording, PauseRecording
+interface EasyRecording : StartRecording, StopRecording, PauseRecording, ResumeRecording
 
-interface StartRecording
+interface StartRecording {
+    fun startRecording(recordSettings: RecordSettings)
+}
 
-interface StopRecording
+interface StopRecording {
+    fun stopRecording()
+}
 
-interface PauseRecording
+interface PauseRecording {
+    fun pauseRecording()
+}
+
+interface ResumeRecording {
+    fun resumeRecording()
+}

@@ -4,6 +4,8 @@ data class RecordAudio(
     val name: String,
     val time: String,
     val duration: String,
+    val size: String,
+    val playbackFile: String,
     val action: RecordFileAction? = null)
 
 enum class RecordFileAction {

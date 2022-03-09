@@ -1,0 +1,98 @@
+package com.holv.apps.recordvoiceapp.recordUseCase.businessLogic
+
+import android.app.Application
+import android.media.MediaPlayer
+import android.os.Environment
+import android.util.Log
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.SeekBarMax
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.StopPlayback
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels.SetCountTimeFromAudioDuration
+import java.io.IOException
+
+class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
+
+    private var fileName: String = ""
+    private var player: MediaPlayer? = null
+    private var listenerDuration: SeekBarMax? = null
+    private var listenerCountUpTime :SetCountTimeFromAudioDuration? = null
+    private var pausePlayback: Int? = 0
+
+    private val MediaPlayer.seconds: Int
+        get() {
+            return this.duration / 1000
+        }
+
+    private val MediaPlayer.currentSeconds: Int
+        get() {
+            return this.currentPosition / 1000
+        }
+
+    override fun playRecording(infoRecording: InfoRecording) {
+        val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+
+        downloadFolder?.listFiles()?.iterator()?.forEachRemaining {
+            val bytes = it.length()
+            val kilobytes = bytes/1024
+            val megabytes = kilobytes/1024
+            Log.d("PlayAudio","--> name = ${it.name} file size = $megabytes mb and in kilobytes = $kilobytes kbs")
+            if (it.name.contains("mp3")) {
+                Log.d("PlayAudio","deleting ${it.name}")
+                it.delete()
+            }
+        }
+        fileName = if(infoRecording.path.isNotEmpty()) infoRecording.path else "$downloadFolder/$TMP_FILE_M4A_NAME"
+        Log.e("PlayAudio", "the player is playing ${player?.isPlaying}")
+        player = MediaPlayer().apply {
+            try {
+                setDataSource(fileName)
+                prepare()
+                start()
+                listenerDuration?.setMaxSeekBar(timeInString(seconds), seconds)
+                listenerCountUpTime?.setCountUpTimer(seconds)
+
+            } catch (e: IOException) {
+                Log.e("PlayAudio", "prepare() failed")
+            }
+        }
+        if (pausePlayback != null && pausePlayback!! > 0) {
+            val seekToPos = pausePlayback!! + 1
+            player?.seekTo(seekToPos * 1000)
+        }
+
+    }
+
+    override fun stopPlayBack() {
+        pausePlayback = 0
+        player?.release()
+        player = null
+    }
+
+    override fun pausePlayback() {
+        pausePlayback = player?.currentSeconds
+        player?.pause()
+    }
+
+    override fun setListener(listenerDuration: SeekBarMax) {
+        this.listenerDuration =  listenerDuration
+    }
+
+    override fun setListenerSeconds(secondsDuration: SetCountTimeFromAudioDuration) {
+        this.listenerCountUpTime = secondsDuration
+    }
+
+    private fun timeInString(seconds: Int): String {
+        return String.format(
+            "%02d:%02d",
+            (seconds / 3600 * 60 + ((seconds % 3600) / 60)),
+            (seconds % 60)
+        )
+    }
+
+    override fun stopPlayback() {
+        stopPlayBack()
+    }
+
+    companion object {
+        const val TMP_FILE_M4A_NAME = "audiorecord.m4a"
+    }
+}
