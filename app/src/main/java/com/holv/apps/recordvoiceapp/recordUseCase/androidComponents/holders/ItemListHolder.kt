@@ -18,6 +18,7 @@ class ItemListHolder(
             getItem(adapterPosition).let {
                 val record = it as Records
                 Toast.makeText(view.root.context, "good Text ${record.recordAudio.name}", Toast.LENGTH_LONG).show()
+                action(Events.PlayRecordedAudio(record.recordAudio))
             }
         }
     }

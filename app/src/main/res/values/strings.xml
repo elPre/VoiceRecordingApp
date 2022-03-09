@@ -6,6 +6,12 @@
     <string name="fan_high">3</string>
     <string name="start_clock">00:00</string>
     <string name="recordings">Recordings</string>
+    <string name="banner_random_change">Banner random changing during 1 min</string>
+    <string name="record">record</string>
+    <string name="play">play</string>
+    <string name="stop">stop</string>
+    <string name="pause">pause</string>
+    <string name="_00_00">00:00</string>
 
 
     <string-array name="actions_recordings">

@@ -6,14 +6,14 @@
 
     <TextView
         android:id="@+id/time_recording"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/start_clock"
-        android:textSize="54sp"
+        android:textSize="60sp"
         android:gravity="center"
         android:textColor="@color/orange"
         android:textStyle="bold"
-        android:layout_marginTop="10dp"
+        android:layout_marginBottom="15dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -24,8 +24,8 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:layout_marginTop="10dp"
-        android:text="record"
-        app:layout_constraintEnd_toStartOf="@+id/time_recording"
+        android:text="@string/record"
+        app:layout_constraintEnd_toStartOf="@+id/play_btn"
         app:layout_constraintTop_toBottomOf="@id/time_recording" />
 
     <Button
@@ -34,7 +34,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:layout_marginTop="10dp"
-        android:text="play"
+        android:text="@string/play"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintLeft_toRightOf="@id/record_btn"
         app:layout_constraintStart_toStartOf="parent"
@@ -46,9 +46,9 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:layout_marginTop="10dp"
-        android:text="stop"
+        android:text="@string/stop"
         app:layout_constraintLeft_toRightOf="@id/play_btn"
-        app:layout_constraintStart_toEndOf="@+id/time_recording"
+        app:layout_constraintStart_toEndOf="@+id/play_btn"
         app:layout_constraintTop_toBottomOf="@id/time_recording" />
 
 
@@ -62,7 +62,17 @@
         android:layout_marginTop="30dp"
         android:progressDrawable="@drawable/seek_bar_ruler"
         android:thumb="@drawable/seek_bar_slider"
-        app:layout_constraintTop_toBottomOf="@id/record_btn" />
+        app:layout_constraintTop_toBottomOf="@id/stop_btn" />
+
+    <TextView
+        android:id="@+id/duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        app:layout_constraintTop_toBottomOf="@id/seekBar"
+        app:layout_constraintStart_toStartOf="parent"
+        android:text="@string/_00_00"/>
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
