@@ -13,7 +13,7 @@ class RecordingAudio(val app: Application): EasyRecording {
     private var fileName: String = ""
 
     override fun startRecording(recordSettings: RecordSettings) {
-        val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+        val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
         fileName = "$downloadFolder/$TMP_FILE_M4A_NAME"
         // need to get the info that comes  in the recordingSettings
         // and set it into the MediaRecorder object

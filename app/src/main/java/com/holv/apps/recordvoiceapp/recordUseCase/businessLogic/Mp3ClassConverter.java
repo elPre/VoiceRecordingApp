@@ -22,7 +22,7 @@ public class Mp3ClassConverter implements Mp3Converter {
 
     @Override
     public void convertToMp3(String fileName, String path, Application app) {
-        File pathToDoc = app.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+        File pathToDoc = app.getExternalFilesDir(Environment.DIRECTORY_MUSIC);
 
         String filePath = pathToDoc.getPath() + "/audiorecord.m4a";
         String outPutFile = pathToDoc.getPath() + "/audiorecordMP3.mp3";
@@ -31,7 +31,7 @@ public class Mp3ClassConverter implements Mp3Converter {
 
         StringBuilder sb = new StringBuilder("-i ")
                 .append(filePath)
-                .append(" -c:v copy -c:a libmp3lame -q:a 9 ")
+                .append(" -c:v copy -c:a libmp3lame -q:a 9 ")//need to pass the number through parameter
                 .append(outPutFile);
 
         Log.d("Mp3ClassConverter", "running the command  --> " + sb.toString());

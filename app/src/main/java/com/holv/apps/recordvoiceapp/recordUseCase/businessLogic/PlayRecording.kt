@@ -1,7 +1,7 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.businessLogic
 
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.SeekBarMax
-import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels.SetCountTimeFromAudioDuration
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels.GetDurationFromAudio
 
 interface PlayRecording: Playback,
     StopPlayback,
@@ -21,6 +21,7 @@ interface StopPlayback {
 
 interface PausePlayback {
     fun pausePlayback()
+    fun seekWhilePause(pos: Int)
 }
 
 interface SetListenerDuration {
@@ -28,7 +29,7 @@ interface SetListenerDuration {
 }
 
 interface SetListenerSeconds {
-    fun setListenerSeconds(secondsDuration: SetCountTimeFromAudioDuration)
+    fun setListenerSeconds(secondsDuration: GetDurationFromAudio)
 }
 
 interface GetAudioCurrentTime {

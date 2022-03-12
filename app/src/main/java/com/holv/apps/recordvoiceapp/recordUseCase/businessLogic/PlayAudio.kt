@@ -6,7 +6,7 @@ import android.os.Environment
 import android.util.Log
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.SeekBarMax
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.StopPlayback
-import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels.SetCountTimeFromAudioDuration
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels.GetDurationFromAudio
 import java.io.IOException
 
 class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
@@ -14,7 +14,7 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
     private var fileName: String = ""
     private var player: MediaPlayer? = null
     private var listenerDuration: SeekBarMax? = null
-    private var listenerCountUpTime :SetCountTimeFromAudioDuration? = null
+    private var listenerCountUpTime :GetDurationFromAudio? = null
     private var pausePlayback: Int? = 0
 
     private val MediaPlayer.seconds: Int
@@ -28,7 +28,9 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
         }
 
     override fun playRecording(infoRecording: InfoRecording) {
-        val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+        val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+
+        Log.d("PlayAudio","current path to store audio files ---> $downloadFolder")
 
         downloadFolder?.listFiles()?.iterator()?.forEachRemaining {
             val bytes = it.length()
@@ -48,7 +50,7 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
                 prepare()
                 start()
                 listenerDuration?.setMaxSeekBar(timeInString(seconds), seconds)
-                listenerCountUpTime?.setCountUpTimer(seconds)
+                listenerCountUpTime?.getAudioDuration(seconds)
 
             } catch (e: IOException) {
                 Log.e("PlayAudio", "prepare() failed")
@@ -72,11 +74,15 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
         player?.pause()
     }
 
+    override fun seekWhilePause(pos: Int) {
+        pausePlayback = pos
+    }
+
     override fun setListener(listenerDuration: SeekBarMax) {
         this.listenerDuration =  listenerDuration
     }
 
-    override fun setListenerSeconds(secondsDuration: SetCountTimeFromAudioDuration) {
+    override fun setListenerSeconds(secondsDuration: GetDurationFromAudio) {
         this.listenerCountUpTime = secondsDuration
     }
 
@@ -89,16 +95,16 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
         player?.seekTo(pos * 1000)
     }
 
+    override fun stopPlayback() {
+        stopPlayBack()
+    }
+
     private fun timeInString(seconds: Int): String {
         return String.format(
             "%02d:%02d",
             (seconds / 3600 * 60 + ((seconds % 3600) / 60)),
             (seconds % 60)
         )
-    }
-
-    override fun stopPlayback() {
-        stopPlayBack()
     }
 
     companion object {

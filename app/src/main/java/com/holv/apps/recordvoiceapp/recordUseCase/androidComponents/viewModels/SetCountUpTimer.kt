@@ -1,7 +1,7 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels
 
-interface SetCountUpTimer : SetCountTimeFromAudioDuration
+interface SetCountUpTimer : GetDurationFromAudio
 
-interface SetCountTimeFromAudioDuration {
-    fun setCountUpTimer(sec: Int)
+interface GetDurationFromAudio {
+    fun getAudioDuration(sec: Int)
 }

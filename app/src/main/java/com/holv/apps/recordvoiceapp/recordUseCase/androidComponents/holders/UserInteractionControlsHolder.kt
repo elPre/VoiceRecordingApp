@@ -70,6 +70,7 @@ class UserInteractionControlsHolder(
     }
 
     override fun setMaxSeekBar(maxString: String, maxInt: Int) {
+
         maxSeekBarValue = maxInt * 100
         view.seekBar.max = maxSeekBarValue // allows the user to have a great seek bar experience
         view.duration.text = maxString
