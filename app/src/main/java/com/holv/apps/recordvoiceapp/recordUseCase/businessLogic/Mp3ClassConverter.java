@@ -22,23 +22,17 @@ public class Mp3ClassConverter implements Mp3Converter {
 
     @Override
     public void convertToMp3(String fileName, String path, Application app) {
-        File pathToDoc = app.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+        File pathToDoc = app.getExternalFilesDir(Environment.DIRECTORY_MUSIC);
 
         String filePath = pathToDoc.getPath() + "/audiorecord.m4a";
-        String outPutFile = pathToDoc.getPath() + "/audiorecordMP3.mp3";
-        MediaInformation info = FFprobe.getMediaInformation(filePath);
-        Log.d("Mp3ClassConverter", "here is the info --> " + info.getFilename());
+        String outPutFile = pathToDoc.getPath() + "/"+fileName+".mp3";
 
         StringBuilder sb = new StringBuilder("-i ")
                 .append(filePath)
-                .append(" -c:v copy -c:a libmp3lame -q:a 9 ")
+                .append(" -c:v copy -c:a libmp3lame -q:a 0 ")//need to pass the number through parameter
                 .append(outPutFile);
 
-        Log.d("Mp3ClassConverter", "running the command  --> " + sb.toString());
-
         int rc = FFmpeg.execute(sb.toString());
-
-        Log.d("Mp3ClassConverter", "after the command --> " + rc);
 
         if (rc == RETURN_CODE_SUCCESS) {
             Log.d("Mp3ClassConverter", "File converted to MP3");

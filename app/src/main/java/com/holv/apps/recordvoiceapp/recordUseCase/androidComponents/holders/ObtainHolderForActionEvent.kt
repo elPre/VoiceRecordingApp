@@ -13,6 +13,7 @@ interface UpdateTickClock {
 
 interface SeekBarMax {
     fun setMaxSeekBar(maxString: String, maxInt: Int)
+    fun updateSeekBar(updateSeekBar: Int)
 }
 
 interface StopPlayback {
@@ -21,4 +22,8 @@ interface StopPlayback {
 
 interface FinishPlayback {
     fun onFinishPlayback()
+}
+
+interface LoopPlayBack {
+    fun setLoopingPlayback(loopPlayback : Boolean)
 }

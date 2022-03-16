@@ -1,5 +1,7 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders
 
+import android.util.Log
+import android.widget.SeekBar
 import com.holv.apps.recordvoiceapp.R
 import com.holv.apps.recordvoiceapp.databinding.UserInteractionInformationHolderBinding
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.UserControls
@@ -10,6 +12,21 @@ class UserInteractionControlsHolder(
     private val action: (Events) -> Unit
 ) : BaseRecordViewHolder<UserControls>(view.root),
     ObtainHolderForActionEvent {
+
+    private var maxSeekBarValue = 0
+
+    private val seekBarListener = object :  SeekBar.OnSeekBarChangeListener {
+        override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+            Log.d("UserInteractionControlsHolder","${progress.div(100)}")
+            action(Events.SeekBarReflectOnTimer(progress.div(100)))
+        }
+
+        override fun onStartTrackingTouch(seekBar: SeekBar?) { }
+
+        override fun onStopTrackingTouch(seekBar: SeekBar?) {
+            action(Events.SeekBarAudio((seekBar?.progress?.div(100)) ?: 0))
+        }
+    }
 
     init {
         val resource = view.root.resources
@@ -40,17 +57,27 @@ class UserInteractionControlsHolder(
             view.recordBtn.text = resource.getString(R.string.record)
             action(Events.Stop)
         }
+        view.seekBar.setOnSeekBarChangeListener(seekBarListener)
+        view.seekBar.progress = 0
     }
 
-    override fun bind(item: UserControls) { }
+    override fun bind(item: UserControls) {
+
+    }
 
     override fun onClockTick(msg: String) {
         view.timeRecording.text = msg
     }
 
     override fun setMaxSeekBar(maxString: String, maxInt: Int) {
-        view.seekBar.max = maxInt * 100 // allows the user to have a great seek bar experience
+
+        maxSeekBarValue = maxInt * 100
+        view.seekBar.max = maxSeekBarValue // allows the user to have a great seek bar experience
         view.duration.text = maxString
+    }
+
+    override fun updateSeekBar(updateSeekBar: Int) {
+        view.seekBar.setProgress(updateSeekBar * 100, false)
     }
 
     override fun onFinishPlayback() {

@@ -8,5 +8,12 @@ class LegendRecordingsHolder(
     private val view: LegendRecordingsHolderBinding,
     private val action: (Events) -> Unit
 ): BaseRecordViewHolder<LegendRecordings>(view.root) {
+
+    init {
+        view.ivSettings.setOnClickListener {
+            action(Events.OpenSettings)
+        }
+    }
+
     override fun bind(item: LegendRecordings) { }
 }

@@ -59,3 +59,4 @@ abstract class BaseFragment<VB : ViewBinding> : Fragment() {
 
     protected open fun VB.clearViews() = Unit
 }
+

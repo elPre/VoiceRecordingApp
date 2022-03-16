@@ -22,6 +22,7 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>() {
     private val viewModel: RecordViewModel by viewModels {
         RecordViewModel.Factory(requireContext().applicationContext as Application)
     }
+    private var isListenerReadyForUpdateTickClock = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,13 +92,28 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>() {
                 viewModel.animationOnOff(false)
                 viewModel.stopRecording()
                 viewModel.stopPlayback()
+                if (viewModel.startRecording.get()) {
+                    SaveFileDialogFragment.newInstance(this.viewModel).show(childFragmentManager, SaveFileDialogFragment.TAG)
+                }
             }
             Events.PausePlayback -> {
                 viewModel.animationOnOff(false)
                 viewModel.pausePlayback()
             }
             is Events.PlayRecordedAudio -> {
+                viewModel.animationOnOff(true)
                 viewModel.startPlaybackFromRecordings(event.recordAudio)
+            }
+            is Events.SeekBarAudio -> {
+                viewModel.setSeekBarPos(event.pos)
+            }
+            is Events.SeekBarReflectOnTimer -> {
+                if (isListenerReadyForUpdateTickClock) {
+                    viewModel.setSeekBarPosUpdateTimer(event.pos)
+                }
+            }
+            Events.OpenSettings -> {
+                SettingsDialogFragment.newInstance(this.viewModel).show(childFragmentManager, SettingsDialogFragment.TAG)
             }
         }
     }
@@ -105,6 +121,7 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>() {
     private fun setListenersForHolder() {
         Handler(Looper.myLooper()!!).postDelayed(({
             viewModel.setListenerForHolders(binding.recordRv)
+            isListenerReadyForUpdateTickClock = true
         }), ONE_SEC)
 
     }

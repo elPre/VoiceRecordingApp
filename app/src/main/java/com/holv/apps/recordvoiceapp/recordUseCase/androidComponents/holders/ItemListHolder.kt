@@ -1,6 +1,5 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders
 
-import android.view.View
 import android.widget.Toast
 import com.holv.apps.recordvoiceapp.databinding.ItemRecordingBinding
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.RecordItem
