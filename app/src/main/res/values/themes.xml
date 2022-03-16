@@ -13,4 +13,16 @@
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
     </style>
+
+    <style name="AppDialogTheme" parent="Theme.AppCompat.Light.Dialog.MinWidth">
+        <item name="android:windowBackground">@drawable/bg_dialog_rounded_corners</item>
+        <item name="android:windowMinWidthMajor">60%</item>
+        <item name="android:windowMinWidthMinor">85%</item>
+        <item name="android:fitsSystemWindows">false</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="colorPrimary">@color/purple_700</item>
+        <item name="colorPrimaryDark">@color/purple_700</item>
+        <item name="colorAccent">@color/purple_700</item>
+    </style>
+
 </resources>

@@ -9,5 +9,7 @@
     <color name="white">#FFFFFFFF</color>
 
     <color name="orange">#F76E11</color>
+    <color name="medGray">#706F73</color>
+    <color name="blue_settings">#2490FF</color>
 
 </resources>

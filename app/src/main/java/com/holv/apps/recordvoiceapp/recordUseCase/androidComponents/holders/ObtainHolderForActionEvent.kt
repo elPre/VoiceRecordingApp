@@ -23,3 +23,7 @@ interface StopPlayback {
 interface FinishPlayback {
     fun onFinishPlayback()
 }
+
+interface LoopPlayBack {
+    fun setLoopingPlayback(loopPlayback : Boolean)
+}

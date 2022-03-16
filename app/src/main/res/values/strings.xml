@@ -1,9 +1,5 @@
 <resources>
     <string name="app_name">RecordVoiceApp</string>
-    <string name="fan_off">off</string>
-    <string name="fan_low">1</string>
-    <string name="fan_medium">2</string>
-    <string name="fan_high">3</string>
     <string name="start_clock">00:00</string>
     <string name="recordings">Recordings</string>
     <string name="banner_random_change">Banner random changing during 1 min</string>
@@ -12,7 +8,17 @@
     <string name="stop">stop</string>
     <string name="pause">pause</string>
     <string name="_00_00">00:00</string>
-
+    <string name="save_file_name">File Name</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="file_name">Please type the file name</string>
+    <string name="select_the_audio_quality">Select Audio Quality</string>
+    <string name="mp3_super_low">Mp3 super low (64 kilobytes)</string>
+    <string name="mp3_low">Mp3 low (96 kilobytes)</string>
+    <string name="mp3_standard">Mp3 standard (128 kilobytes)</string>
+    <string name="mp3_standard_high">Mp3 standard high (192 kilobytes)</string>
+    <string name="mp3_high">Mp3 high (256 kilobytes)</string>
+    <string name="mp3_highest">Mp3 highest (320 kilobytes)</string>
 
     <string-array name="actions_recordings">
         <item>share</item>

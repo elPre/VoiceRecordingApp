@@ -17,7 +17,7 @@ class UserInteractionControlsHolder(
 
     private val seekBarListener = object :  SeekBar.OnSeekBarChangeListener {
         override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-            //Log.d("UserInteractionControlsHolder","$progress")
+            Log.d("UserInteractionControlsHolder","${progress.div(100)}")
             action(Events.SeekBarReflectOnTimer(progress.div(100)))
         }
 

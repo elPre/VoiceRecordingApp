@@ -3,7 +3,6 @@ package com.holv.apps.recordvoiceapp.recordUseCase.businessLogic
 import android.os.CountDownTimer
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.FireAnimation
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.ObtainHolderForActionEvent
-import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels.FinishingPlayback
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
@@ -21,7 +20,6 @@ class ClockTimer {
     //listeners that lives on the holders
     var listener: ObtainHolderForActionEvent? = null
     var fireAnimationListener: FireAnimation? = null
-    var finishPlayback: FinishingPlayback? = null
 
     val countDownTimer =
         object : CountDownTimer(totalSeconds * 1000, intervalSeconds * 1000) {
@@ -29,9 +27,11 @@ class ClockTimer {
             override fun onTick(millisUntilFinished: Long) {
 
                 if (seconds.get() == 0L) {
+
                     listener?.onClockTick("00:00")
                     timeHolder.incrementAndGet()
                     seconds.incrementAndGet()
+
                 } else {
 
                     if (minutes.get() > 59) {
@@ -49,16 +49,6 @@ class ClockTimer {
                     val secs = if (seconds.get() > 9) "$seconds" else "0$seconds"
                     val min = if (minutes.get() > 9) "$minutes" else "0$minutes"
                     val hrs = if (hours.get() > 9) "$hours" else "0$hours"
-
-                    if (isPlaying.get()) {
-                        if (seconds.get() >= totalSecondsToPlayback || timeHolder.get() >= totalSecondsToPlayback) {
-                            isPlaying.set(false)
-                            onFinish()
-                            cancel()
-                            finishPlayback?.onFinishPlayback()
-                            listener?.onFinishPlayback()
-                        }
-                    }
 
                     if (hours.get() > 0) {
                         listener?.onClockTick("$hrs:$min:$secs")

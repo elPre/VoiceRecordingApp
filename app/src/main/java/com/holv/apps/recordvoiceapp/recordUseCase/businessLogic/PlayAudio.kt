@@ -4,12 +4,13 @@ import android.app.Application
 import android.media.MediaPlayer
 import android.os.Environment
 import android.util.Log
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.LoopPlayBack
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.SeekBarMax
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.StopPlayback
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels.GetDurationFromAudio
 import java.io.IOException
 
-class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
+class PlayAudio(val app: Application) : PlayRecording, StopPlayback, LoopPlayBack {
 
     private var fileName: String = ""
     private var player: MediaPlayer? = null
@@ -43,7 +44,7 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
             }
         }
         fileName = if(infoRecording.path.isNotEmpty()) infoRecording.path else "$downloadFolder/$TMP_FILE_M4A_NAME"
-        Log.e("PlayAudio", "the player is playing ${player?.isPlaying}")
+        Log.e("PlayAudio", "the player is playing $fileName")
         player = MediaPlayer().apply {
             try {
                 setDataSource(fileName)
@@ -59,6 +60,7 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
         if (pausePlayback != null && pausePlayback!! > 0) {
             val seekToPos = pausePlayback!! + 1
             player?.seekTo(seekToPos * 1000)
+            pausePlayback = 0
         }
 
     }
@@ -97,6 +99,10 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
 
     override fun stopPlayback() {
         stopPlayBack()
+    }
+
+    override fun setLoopingPlayback(loopPlayback: Boolean) {
+        player?.isLooping = loopPlayback
     }
 
     private fun timeInString(seconds: Int): String {

@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -93,6 +92,9 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>() {
                 viewModel.animationOnOff(false)
                 viewModel.stopRecording()
                 viewModel.stopPlayback()
+                if (viewModel.startRecording.get()) {
+                    SaveFileDialogFragment.newInstance(this.viewModel).show(childFragmentManager, SaveFileDialogFragment.TAG)
+                }
             }
             Events.PausePlayback -> {
                 viewModel.animationOnOff(false)
@@ -103,7 +105,6 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>() {
                 viewModel.startPlaybackFromRecordings(event.recordAudio)
             }
             is Events.SeekBarAudio -> {
-                Log.d("RecordFragment", "this is  the pos  to seekto  ${event.pos}")
                 viewModel.setSeekBarPos(event.pos)
             }
             is Events.SeekBarReflectOnTimer -> {
@@ -111,7 +112,9 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>() {
                     viewModel.setSeekBarPosUpdateTimer(event.pos)
                 }
             }
-
+            Events.OpenSettings -> {
+                SettingsDialogFragment.newInstance(this.viewModel).show(childFragmentManager, SettingsDialogFragment.TAG)
+            }
         }
     }
 

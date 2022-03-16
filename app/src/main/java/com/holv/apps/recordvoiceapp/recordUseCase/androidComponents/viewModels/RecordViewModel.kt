@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.*
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.pojos.RecordAudio
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.pojos.RecordFileAction
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.SavingFileMp3
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.SettingsMp3
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.FireAnimation
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.ObtainHolderForActionEvent
 import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.*
@@ -20,8 +22,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
-class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer, FinishingPlayback {
+class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
+    FinishingPlayback, SavingFileMp3, SettingsMp3 {
 
     //Business objects
     private val recordAudio: EasyRecording = RecordingAudio(app)
@@ -29,7 +33,7 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer, Fini
     private val ffmpeg: Mp3Converter = Mp3ClassConverter()
     private val clockTimer = ClockTimer()
 
-    private var totalSecondsToPlayback = 0L
+    private var totalSecondsToPlayback = AtomicLong(0)
     private var isPlaying = AtomicBoolean(false)
     private var isPlaybackPause = AtomicBoolean(false)
 
@@ -46,11 +50,20 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer, Fini
     //Pause Recording
     private var isRecordingPause = AtomicBoolean(false)
 
+    //should show dialog fragment to save  file
+    var startRecording = AtomicBoolean(false)
+
     //seek while pause
     private var seekWhilePausePlayback = 0
 
+    //loop the playback
+    private var isLooperOn = AtomicBoolean(false)
+
+    //loop all the play list
+    private var loopAllThePlayList = AtomicBoolean(false)
+
     override fun getAudioDuration(sec: Int) {
-        totalSecondsToPlayback = sec.toLong()
+        totalSecondsToPlayback.set(sec.toLong())
         clockTimer.totalSecondsToPlayback = sec.toLong()
     }
 
@@ -89,12 +102,14 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer, Fini
 
 
     fun starRecording() = viewModelScope.launch {
+        startRecording.set(true)
         timeStamp = Date()
         clockTimer.countDownTimer.start()
         if (isRecordingPause.get()) {
             recordAudio.resumeRecording()
             isRecordingPause.set(false)
         } else {
+            //get from the preferences data store the record type
             recordAudio.startRecording(RecordSettings(RecordType.MP3_HIGHEST))
         }
     }
@@ -112,6 +127,7 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer, Fini
     }
 
     fun startPlayback() = viewModelScope.launch {
+        startRecording.set(false)
         if (isPlaying.get().not()) {
             if (isPlaybackPause.get()) {
                 playAudio.seekWhilePause(seekWhilePausePlayback)
@@ -125,6 +141,7 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer, Fini
     }
 
     fun startPlaybackFromRecordings(playbackData: RecordAudio) = viewModelScope.launch {
+        startRecording.set(false)
         if (isPlaying.get().not()) {
             if (isPlaybackPause.get()) {
                 playAudio.seekWhilePause(seekWhilePausePlayback)
@@ -147,7 +164,6 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer, Fini
     fun stopPlayback() = viewModelScope.launch {
         isPlaying.set(false)
         playAudio.stopPlayBack()
-        //Also need the time stamp
         clockTimer.resetTimerVariables()
         listener.onClockTick("00:00")
         listener.updateSeekBar(0)
@@ -173,7 +189,6 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer, Fini
         Log.d("RecordViewModel","setSeekBarPos -> $pos")
         playAudio.onSeekToSpecificPos(pos)
         listener.updateSeekBar(pos)
-        clockTimer.resetTimerVariables()
         val isMoreThanHour = pos >= 3600
         if (isMoreThanHour) {
             val hr = pos / ONE_HOUR_IN_SECS
@@ -193,6 +208,7 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer, Fini
 
     fun setSeekBarPosUpdateTimer(pos: Int) = viewModelScope.launch {
         seekWhilePausePlayback = pos
+        Log.d("RecordViewModel","this is the pos = $pos")
         var showTimer = ""
         val isMoreThanHour = pos >= 3600
         if (isMoreThanHour) {
@@ -212,13 +228,16 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer, Fini
             showTimer = "$min:$secs"
         }
         listener.onClockTick(showTimer)
-        if(pos >= totalSecondsToPlayback) {
+        if(pos >= totalSecondsToPlayback.get()) {
             fireAnimationListener.onFireAnimation(false)
             listener.onFinishPlayback()
             isPlaying.set(false)
             clockTimer.isPlaying.set(false)
             playAudio.stopPlayBack()
             clockTimer.resetTimerVariables()
+            if (isLooperOn.get()) {
+                startPlayback()
+            }
         }
     }
 
@@ -243,6 +262,22 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer, Fini
         }
     }
 
+    override fun onSaveFile(fileName: String) {
+        viewModelScope.launch {
+            startRecording.set(false)
+            Log.d(TAG,"onSaveFile $fileName")
+        }
+    }
+
+    override fun onCancelSave() {
+        Log.d(TAG,"onCancelSave")
+        startRecording.set(false)
+    }
+
+    override fun saveSettings(recordSettings: RecordSettings) {
+        Log.d(TAG,"saveSettings  -> ${recordSettings.recordQuality.name}")
+    }
+
     class Factory(private val app: Application) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
@@ -251,9 +286,10 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer, Fini
     }
 
     companion object {
+        const val TAG = "RecordViewModel"
         private const val ANIMATION_HOLDER = 1
         private const val USER_CONTROLS_HOLDER = 2
-        private const val HALF_SECOND = 500L
+        private const val HALF_SECOND = 1000L
         private const val ONE_HOUR_IN_SECS = 3600
     }
 

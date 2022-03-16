@@ -47,4 +47,5 @@ dependencies {
     implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.+'
     implementation 'com.arthenica:mobile-ffmpeg-full:4.4'
     implementation "androidx.fragment:fragment-ktx:$fragment_version"
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
 }
