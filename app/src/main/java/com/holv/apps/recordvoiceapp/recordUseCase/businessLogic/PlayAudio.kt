@@ -4,13 +4,12 @@ import android.app.Application
 import android.media.MediaPlayer
 import android.os.Environment
 import android.util.Log
-import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.LoopPlayBack
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.SeekBarMax
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.StopPlayback
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels.GetDurationFromAudio
 import java.io.IOException
 
-class PlayAudio(val app: Application) : PlayRecording, StopPlayback, LoopPlayBack {
+class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
 
     private var fileName: String = ""
     private var player: MediaPlayer? = null
@@ -38,13 +37,9 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback, LoopPlayBac
             val kilobytes = bytes/1024
             val megabytes = kilobytes/1024
             Log.d("PlayAudio","--> name = ${it.name} file size = $megabytes mb and in kilobytes = $kilobytes kbs")
-            if (it.name.contains("mp3")) {
-                Log.d("PlayAudio","deleting ${it.name}")
-                it.delete()
-            }
         }
         fileName = if(infoRecording.path.isNotEmpty()) infoRecording.path else "$downloadFolder/$TMP_FILE_M4A_NAME"
-        Log.e("PlayAudio", "the player is playing $fileName")
+        Log.d("PlayAudio", "the player is playing $fileName")
         player = MediaPlayer().apply {
             try {
                 setDataSource(fileName)
@@ -55,6 +50,8 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback, LoopPlayBac
 
             } catch (e: IOException) {
                 Log.e("PlayAudio", "prepare() failed")
+                Log.e("PlayAudio", "message -> ${e.message}")
+                e.printStackTrace()
             }
         }
         if (pausePlayback != null && pausePlayback!! > 0) {
@@ -101,8 +98,20 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback, LoopPlayBac
         stopPlayBack()
     }
 
-    override fun setLoopingPlayback(loopPlayback: Boolean) {
-        player?.isLooping = loopPlayback
+    override fun getDurationPlayback(pathToFile: String): String {
+        var duration: String? = null
+        player = MediaPlayer().apply {
+            try {
+                setDataSource(pathToFile)
+                prepare()
+                duration = timeInString(seconds)
+            } catch (e: IOException) {
+                Log.e("PlayAudio", "prepare() failed  -> $pathToFile")
+            }
+        }
+        player?.release()
+        player = null
+        return duration ?: timeInString(0)
     }
 
     private fun timeInString(seconds: Int): String {
@@ -116,4 +125,5 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback, LoopPlayBac
     companion object {
         const val TMP_FILE_M4A_NAME = "audiorecord.m4a"
     }
+
 }

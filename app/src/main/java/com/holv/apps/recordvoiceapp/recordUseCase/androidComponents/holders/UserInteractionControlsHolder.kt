@@ -1,6 +1,5 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders
 
-import android.util.Log
 import android.widget.SeekBar
 import com.holv.apps.recordvoiceapp.R
 import com.holv.apps.recordvoiceapp.databinding.UserInteractionInformationHolderBinding
@@ -17,7 +16,6 @@ class UserInteractionControlsHolder(
 
     private val seekBarListener = object :  SeekBar.OnSeekBarChangeListener {
         override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-            Log.d("UserInteractionControlsHolder","${progress.div(100)}")
             action(Events.SeekBarReflectOnTimer(progress.div(100)))
         }
 

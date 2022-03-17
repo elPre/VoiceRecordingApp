@@ -53,7 +53,7 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>() {
 
     // Requesting permission to RECORD_AUDIO
     private var permissionToRecordAccepted = false
-    private var permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO)
+    private var permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
     override fun onRequestPermissionsResult(
         requestCode: Int,

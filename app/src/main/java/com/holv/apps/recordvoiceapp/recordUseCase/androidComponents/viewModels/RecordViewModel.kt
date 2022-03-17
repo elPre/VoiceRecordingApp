@@ -2,7 +2,6 @@ package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels
 
 import android.app.Application
 import android.os.Environment
-import android.provider.MediaStore
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -20,6 +19,7 @@ import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.*
 import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.RecordType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
@@ -30,7 +30,7 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
     //Business objects
     private val recordAudio: EasyRecording = RecordingAudio(app)
     private val playAudio: PlayRecording = PlayAudio(app)
-    private val ffmpeg: Mp3Converter = Mp3ClassConverter()
+    //private val ffmpeg: Mp3Converter = Mp3ClassConverter()
     private val clockTimer = ClockTimer()
 
     private var totalSecondsToPlayback = AtomicLong(0)
@@ -61,6 +61,9 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
 
     //loop all the play list
     private var loopAllThePlayList = AtomicBoolean(false)
+
+    //current audio to play back
+    private var audioPlayback: String = ""
 
     override fun getAudioDuration(sec: Int) {
         totalSecondsToPlayback.set(sec.toLong())
@@ -133,7 +136,7 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
                 playAudio.seekWhilePause(seekWhilePausePlayback)
             }
             playAudio.setListenerSeconds(this@RecordViewModel)
-            playAudio.playRecording(InfoRecording(""))
+            playAudio.playRecording(InfoRecording(audioPlayback))
             isPlaying.set(true)
             clockTimer.isPlaying.set(true)
             getAudioCurrentSeconds()
@@ -186,7 +189,6 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
 
 
     fun setSeekBarPos(pos: Int) = viewModelScope.launch {
-        Log.d("RecordViewModel","setSeekBarPos -> $pos")
         playAudio.onSeekToSpecificPos(pos)
         listener.updateSeekBar(pos)
         val isMoreThanHour = pos >= 3600
@@ -208,7 +210,6 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
 
     fun setSeekBarPosUpdateTimer(pos: Int) = viewModelScope.launch {
         seekWhilePausePlayback = pos
-        Log.d("RecordViewModel","this is the pos = $pos")
         var showTimer = ""
         val isMoreThanHour = pos >= 3600
         if (isMoreThanHour) {
@@ -228,7 +229,7 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
             showTimer = "$min:$secs"
         }
         listener.onClockTick(showTimer)
-        if(pos >= totalSecondsToPlayback.get()) {
+        if (pos >= totalSecondsToPlayback.get()) {
             fireAnimationListener.onFireAnimation(false)
             listener.onFinishPlayback()
             isPlaying.set(false)
@@ -249,7 +250,8 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
         val itemCount = recyclerView.adapter?.itemCount
         if (itemCount != null && itemCount > 0) {
             val animationListener = recyclerView.findViewHolderForAdapterPosition(ANIMATION_HOLDER)
-            val userControlsListener = recyclerView.findViewHolderForAdapterPosition(USER_CONTROLS_HOLDER)
+            val userControlsListener =
+                recyclerView.findViewHolderForAdapterPosition(USER_CONTROLS_HOLDER)
             if (animationListener is FireAnimation) {
                 fireAnimationListener = animationListener
                 clockTimer.fireAnimationListener = fireAnimationListener
@@ -265,17 +267,71 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
     override fun onSaveFile(fileName: String) {
         viewModelScope.launch {
             startRecording.set(false)
-            Log.d(TAG,"onSaveFile $fileName")
+            val ffmpeg : Mp3Converter = Mp3ClassConverter()
+            val fileLogic: FileLogic = FileManager(app)
+
+            // get from the new shared prrefences the mp3 quality recordtype
+            val infoCovertToMp3 = InfoCovertToMp3(
+                app = app,
+                fileName = fileName,
+                recordType = RecordType.MP3_MEDIUM_HIGH
+            )
+            val fileMp3 = ffmpeg.convertToMp3(infoCovertToMp3)
+            audioPlayback = fileMp3.path
+
+            //val fileAudioRecording = getCurrentRecordingFile(app.getExternalFilesDir(Environment.DIRECTORY_MUSIC))
+            val saveFileAudio = AudioFileData(
+                id = Date().time,
+                uri = null,
+                name = fileName,
+                duration = playAudio.getDurationPlayback(fileMp3.path),
+                sizeFile = getFileSizeCurrentRecording(fileMp3),
+                date = timeStamp ?: Date(),
+                fileAudio = fileMp3
+            )
+            Log.d(TAG, "onSaveFile $saveFileAudio")
+            val isSuccess = fileLogic.saveFile(saveFileAudio)
+            Log.d(TAG, "onSaveFile $isSuccess")
+            queryInfoToLoadRecyclerView()
         }
     }
 
     override fun onCancelSave() {
-        Log.d(TAG,"onCancelSave")
+        Log.d(TAG, "onCancelSave")
         startRecording.set(false)
     }
 
     override fun saveSettings(recordSettings: RecordSettings) {
-        Log.d(TAG,"saveSettings  -> ${recordSettings.recordQuality.name}")
+        Log.d(TAG, "saveSettings  -> ${recordSettings.recordQuality.name}")
+    }
+
+    private fun queryInfoToLoadRecyclerView() = viewModelScope.launch {
+        val fileLogic: FileLogic = FileManager(app)
+        val isSuccessList = fileLogic.queryFiles()
+        Log.d(TAG, "queryInfoToLoadRecyclerView $isSuccessList")
+    }
+
+    private fun getFileSizeCurrentRecording(currentFileRecorded: File?): String {
+        var size = "0 kbs"
+        currentFileRecorded?.let {
+            val bytes = it.length()
+            val kilobytes = bytes/1024
+            val megabytes = kilobytes/1024
+            size = if (kilobytes.toInt() == 0 && megabytes.toInt() == 0){
+                "$bytes bytes"
+            }else if (megabytes <= 0) {
+                "$kilobytes kbs"
+            } else {
+                val kiloReminders = kilobytes%1024
+                if (kiloReminders > 0) {
+                    "$megabytes.$kiloReminders mb"
+                } else {
+                    "$megabytes mb"
+                }
+
+            }
+        }
+        return size
     }
 
     class Factory(private val app: Application) : ViewModelProvider.Factory {
