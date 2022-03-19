@@ -40,11 +40,6 @@ public class Mp3ClassConverter implements Mp3Converter {
         if (rc == RETURN_CODE_SUCCESS) {
             Log.d("Mp3ClassConverter", "File converted to MP3");
             mp3File = new File(outPutFile);
-            //delete old  file
-            File deleteMp3 = new File(outPutFile);
-            File deleteM4A = new File(filePath);
-            //deleteMp3.delete();
-            //deleteM4A.delete();
         } else if (rc == RETURN_CODE_CANCEL) {
             Log.d("Mp3ClassConverter", "Command execution cancelled by user.");
             //alert the user the recording could not

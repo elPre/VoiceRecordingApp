@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Application
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.view.LayoutInflater
@@ -123,7 +124,6 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>() {
             viewModel.setListenerForHolders(binding.recordRv)
             isListenerReadyForUpdateTickClock = true
         }), ONE_SEC)
-
     }
 
     companion object {

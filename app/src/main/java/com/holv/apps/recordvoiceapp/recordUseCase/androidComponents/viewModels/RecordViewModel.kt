@@ -30,6 +30,7 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
     //Business objects
     private val recordAudio: EasyRecording = RecordingAudio(app)
     private val playAudio: PlayRecording = PlayAudio(app)
+
     //private val ffmpeg: Mp3Converter = Mp3ClassConverter()
     private val clockTimer = ClockTimer()
 
@@ -65,6 +66,12 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
     //current audio to play back
     private var audioPlayback: String = ""
 
+    //the list of recordings
+    private var listOfRecordings = listOf<AudioFileData>()
+
+    //List that hold all  the holders
+    private val list = mutableListOf<RecordItem>()
+
     override fun getAudioDuration(sec: Int) {
         totalSecondsToPlayback.set(sec.toLong())
         clockTimer.totalSecondsToPlayback = sec.toLong()
@@ -77,29 +84,11 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
     }
 
     private fun load() {
-        val list = mutableListOf<RecordItem>()
         list.add(TopBanner)
         list.add(LogoAnimation)
         list.add(UserControls)
         list.add(LegendRecordings)
-        val listRecordings = mutableListOf<Records>()
-        val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
-        val fileName = "$downloadFolder/audiorecord.m4a"
-        for (i in 0 until 100) {
-            listRecordings.add(
-                Records(
-                    RecordAudio(
-                        name = "Amazing time at Bungalow $i let addd more text to see what happens",
-                        time = "Fri Feb 18 2022",
-                        duration = "$i : $i mins",
-                        size = "$i Mb",
-                        playbackFile = fileName,
-                        RecordFileAction.NO_SELECTION
-                    )
-                )
-            )
-        }
-        list.addAll(listRecordings)
+        list.addAll(queryInfoToLoadRecyclerView())
         moduleItem.postValue(list.toList())
     }
 
@@ -267,32 +256,43 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
     override fun onSaveFile(fileName: String) {
         viewModelScope.launch {
             startRecording.set(false)
-            val ffmpeg : Mp3Converter = Mp3ClassConverter()
-            val fileLogic: FileLogic = FileManager(app)
+            if (validateOrCreateRecordingsDirectory()) {
+                val ffmpeg: Mp3Converter = Mp3ClassConverter()
+                val fileLogic: FileLogic = FileManager(app)
 
-            // get from the new shared prrefences the mp3 quality recordtype
-            val infoCovertToMp3 = InfoCovertToMp3(
-                app = app,
-                fileName = fileName,
-                recordType = RecordType.MP3_MEDIUM_HIGH
-            )
-            val fileMp3 = ffmpeg.convertToMp3(infoCovertToMp3)
-            audioPlayback = fileMp3.path
+                // get from the new shared prrefences the mp3 quality recordtype
+                val infoCovertToMp3 = InfoCovertToMp3(
+                    app = app,
+                    fileName = fileName,
+                    recordType = RecordType.MP3_MEDIUM_HIGH
+                )
+                val fileMp3 = ffmpeg.convertToMp3(infoCovertToMp3)
+                //audioPlayback = fileMp3.path
 
-            //val fileAudioRecording = getCurrentRecordingFile(app.getExternalFilesDir(Environment.DIRECTORY_MUSIC))
-            val saveFileAudio = AudioFileData(
-                id = Date().time,
-                uri = null,
-                name = fileName,
-                duration = playAudio.getDurationPlayback(fileMp3.path),
-                sizeFile = getFileSizeCurrentRecording(fileMp3),
-                date = timeStamp ?: Date(),
-                fileAudio = fileMp3
-            )
-            Log.d(TAG, "onSaveFile $saveFileAudio")
-            val isSuccess = fileLogic.saveFile(saveFileAudio)
-            Log.d(TAG, "onSaveFile $isSuccess")
-            queryInfoToLoadRecyclerView()
+                val dateCreated = timeStamp?.let {
+                    it.toString()
+                } ?: Date().toString()
+
+                val saveFileAudio = AudioFileData(
+                    id = Date().time,
+                    uri = null,
+                    name = "$fileName.mp3",
+                    duration = playAudio.getDurationPlayback(fileMp3.path),
+                    sizeFile = getFileSizeCurrentRecording(fileMp3),
+                    date = dateCreated,
+                    fileAudio = fileMp3
+                )
+
+                fileLogic.saveFile(saveFileAudio)
+
+                val listUpdated = queryInfoToLoadRecyclerView()
+                list.addAll(listUpdated)
+                moduleItem.postValue(list.toList())
+            } else {
+                //show snackbar regarding the folder creation
+                Log.d(TAG,"show snackbar regarding the folder creation fAILED")
+            }
+
         }
     }
 
@@ -305,24 +305,40 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
         Log.d(TAG, "saveSettings  -> ${recordSettings.recordQuality.name}")
     }
 
-    private fun queryInfoToLoadRecyclerView() = viewModelScope.launch {
+    private fun queryInfoToLoadRecyclerView(): List<Records> {
         val fileLogic: FileLogic = FileManager(app)
-        val isSuccessList = fileLogic.queryFiles()
-        Log.d(TAG, "queryInfoToLoadRecyclerView $isSuccessList")
+        val listFromMediaStore = fileLogic.queryFiles()
+        val listRecordings = mutableListOf<Records>()
+        listFromMediaStore.map { audioFileData ->
+            listRecordings.add(
+                Records(
+                    RecordAudio(
+                        name = audioFileData.name,
+                        time = audioFileData.date.toString(),
+                        duration = audioFileData.duration,
+                        size = audioFileData.sizeFile,
+                        playbackFile = "${audioFileData.albumName}",
+                        RecordFileAction.NO_SELECTION
+                    )
+                )
+            )
+        }
+
+        return listRecordings
     }
 
     private fun getFileSizeCurrentRecording(currentFileRecorded: File?): String {
         var size = "0 kbs"
         currentFileRecorded?.let {
             val bytes = it.length()
-            val kilobytes = bytes/1024
-            val megabytes = kilobytes/1024
-            size = if (kilobytes.toInt() == 0 && megabytes.toInt() == 0){
+            val kilobytes = bytes / 1024
+            val megabytes = kilobytes / 1024
+            size = if (kilobytes.toInt() == 0 && megabytes.toInt() == 0) {
                 "$bytes bytes"
-            }else if (megabytes <= 0) {
+            } else if (megabytes <= 0) {
                 "$kilobytes kbs"
             } else {
-                val kiloReminders = kilobytes%1024
+                val kiloReminders = kilobytes % 1024
                 if (kiloReminders > 0) {
                     "$megabytes.$kiloReminders mb"
                 } else {
@@ -332,6 +348,14 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
             }
         }
         return size
+    }
+
+    private fun validateOrCreateRecordingsDirectory() : Boolean {
+        val f = File(Environment.getExternalStorageDirectory(), RECORDINGS_FOLDER)
+        if (!f.exists()) {
+            f.mkdirs()
+        }
+        return f.exists()
     }
 
     class Factory(private val app: Application) : ViewModelProvider.Factory {
@@ -347,6 +371,7 @@ class RecordViewModel(val app: Application) : ViewModel(), SetCountUpTimer,
         private const val USER_CONTROLS_HOLDER = 2
         private const val HALF_SECOND = 1000L
         private const val ONE_HOUR_IN_SECS = 3600
+        private const val RECORDINGS_FOLDER = "Recordings"
     }
 
 }

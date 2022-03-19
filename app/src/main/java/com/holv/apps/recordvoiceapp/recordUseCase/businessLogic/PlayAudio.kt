@@ -28,16 +28,16 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
         }
 
     override fun playRecording(infoRecording: InfoRecording) {
-        val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+        val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
 
-        Log.d("PlayAudio","current path to store audio files ---> $downloadFolder")
-
-        downloadFolder?.listFiles()?.iterator()?.forEachRemaining {
-            val bytes = it.length()
-            val kilobytes = bytes/1024
-            val megabytes = kilobytes/1024
-            Log.d("PlayAudio","--> name = ${it.name} file size = $megabytes mb and in kilobytes = $kilobytes kbs")
-        }
+//        Log.d("PlayAudio","current path to store audio files ---> $downloadFolder")
+//
+//        downloadFolder?.listFiles()?.iterator()?.forEachRemaining {
+//            val bytes = it.length()
+//            val kilobytes = bytes/1024
+//            val megabytes = kilobytes/1024
+//            Log.d("PlayAudio","--> name = ${it.name} file size = $megabytes mb and in kilobytes = $kilobytes kbs")
+//        }
         fileName = if(infoRecording.path.isNotEmpty()) infoRecording.path else "$downloadFolder/$TMP_FILE_M4A_NAME"
         Log.d("PlayAudio", "the player is playing $fileName")
         player = MediaPlayer().apply {
@@ -49,7 +49,6 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
                 listenerCountUpTime?.getAudioDuration(seconds)
 
             } catch (e: IOException) {
-                Log.e("PlayAudio", "prepare() failed")
                 Log.e("PlayAudio", "message -> ${e.message}")
                 e.printStackTrace()
             }
