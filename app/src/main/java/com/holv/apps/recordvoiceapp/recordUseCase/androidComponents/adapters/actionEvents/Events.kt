@@ -12,4 +12,6 @@ sealed class Events {
     data class SeekBarAudio(val pos: Int) : Events()
     data class SeekBarReflectOnTimer(val pos: Int) : Events()
     object OpenSettings : Events()
+    data class ShareRecordedAudio (val recordAudio: RecordAudio) : Events()
+    data class DeleteRecordedAudio (val recordAudio: RecordAudio, val adapterPosition: Int) : Events()
 }

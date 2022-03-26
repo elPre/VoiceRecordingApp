@@ -10,6 +10,8 @@ data class AudioFileData(
     val name: String,
     val duration: String,
     val sizeFile: String,
-    val date: String,
+    val date: Date,
     val fileAudio: File? = null,
-    val albumName: String? = null)
+    val albumName: String? = null,
+    val dataPlayback: String? = null,
+    val contentUri: Uri? = null)

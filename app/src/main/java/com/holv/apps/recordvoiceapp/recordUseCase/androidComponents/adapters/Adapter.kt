@@ -61,13 +61,10 @@ class Adapter(
     override fun getItemViewType(position: Int): Int = getItem(position).itemType.ordinal
 
     fun getItemAt(position: Int) = currentList.getOrNull(position)
-
 }
 
 
 object RecordingItemDiff : DiffUtil.ItemCallback<RecordItem>() {
-    override fun areItemsTheSame(oldItem: RecordItem, newItem: RecordItem) =
-        oldItem.itemType == newItem.itemType
-    override fun areContentsTheSame(oldItem: RecordItem, newItem: RecordItem) =
-        oldItem == newItem
+    override fun areItemsTheSame(oldItem: RecordItem, newItem: RecordItem) = oldItem == newItem
+    override fun areContentsTheSame(oldItem: RecordItem, newItem: RecordItem) = oldItem == newItem
 }

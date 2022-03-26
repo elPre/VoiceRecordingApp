@@ -1,26 +1,36 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders
 
+import android.app.Activity
+import android.os.Looper
 import androidx.core.view.isVisible
 import com.holv.apps.recordvoiceapp.databinding.AnimationHolderBinding
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.LogoAnimation
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.actionEvents.Events
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.RecordFragment
+import java.util.logging.Handler
 
 class AnimationHolder(
     private val view: AnimationHolderBinding,
     private val action: (Events) -> Unit
 ): BaseRecordViewHolder<LogoAnimation>(view.root), FireAnimation {
 
+    private val activity = view.root.context as? Activity
+
     override fun bind(item: LogoAnimation) { }
 
     override fun onFireAnimation(isTurn: Boolean) {
         when (isTurn) {
             true -> {
-                view.imGifImage.isVisible = true
-                view.lopperCustomView.isVisible = false
+                this.activity?.runOnUiThread {
+                    view.imGifImage.isVisible = true
+                    view.lopperCustomView.isVisible = false
+                }
             }
             false -> {
-                view.imGifImage.isVisible = false
-                view.lopperCustomView.isVisible = true
+                this.activity?.runOnUiThread {
+                    view.imGifImage.isVisible = false
+                    view.lopperCustomView.isVisible = true
+                }
             }
         }
     }

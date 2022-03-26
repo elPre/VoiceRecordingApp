@@ -1,5 +1,6 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders
 
+import android.app.Activity
 import android.widget.SeekBar
 import com.holv.apps.recordvoiceapp.R
 import com.holv.apps.recordvoiceapp.databinding.UserInteractionInformationHolderBinding
@@ -12,6 +13,7 @@ class UserInteractionControlsHolder(
 ) : BaseRecordViewHolder<UserControls>(view.root),
     ObtainHolderForActionEvent {
 
+    private val activity = view.root.context as? Activity
     private var maxSeekBarValue = 0
 
     private val seekBarListener = object :  SeekBar.OnSeekBarChangeListener {
@@ -59,19 +61,20 @@ class UserInteractionControlsHolder(
         view.seekBar.progress = 0
     }
 
-    override fun bind(item: UserControls) {
-
-    }
+    override fun bind(item: UserControls) { }
 
     override fun onClockTick(msg: String) {
-        view.timeRecording.text = msg
+        activity?.runOnUiThread {
+            view.timeRecording.text = msg
+        }
     }
 
     override fun setMaxSeekBar(maxString: String, maxInt: Int) {
-
-        maxSeekBarValue = maxInt * 100
-        view.seekBar.max = maxSeekBarValue // allows the user to have a great seek bar experience
-        view.duration.text = maxString
+        activity?.runOnUiThread {
+            maxSeekBarValue = maxInt * 100
+            view.seekBar.max = maxSeekBarValue // allows the user to have a great seek bar experience
+            view.duration.text = maxString
+        }
     }
 
     override fun updateSeekBar(updateSeekBar: Int) {
@@ -79,6 +82,8 @@ class UserInteractionControlsHolder(
     }
 
     override fun onFinishPlayback() {
-        view.playBtn.text = view.root.resources.getString(R.string.play)
+        activity?.runOnUiThread {
+            view.playBtn.text = view.root.resources.getString(R.string.play)
+        }
     }
 }

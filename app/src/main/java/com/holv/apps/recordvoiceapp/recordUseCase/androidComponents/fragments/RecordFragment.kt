@@ -1,23 +1,26 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments
 
-import android.Manifest
 import android.app.Application
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.app.ActivityCompat
 import androidx.fragment.app.viewModels
 import com.holv.apps.recordvoiceapp.databinding.RecordFragmentBinding
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.Adapter
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.actionEvents.Events
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.pojos.RecordAudio
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels.RecordViewModel
+import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.RecordSettings
 
-class RecordFragment : BaseFragment<RecordFragmentBinding>() {
+
+class RecordFragment : BaseFragment<RecordFragmentBinding>(),
+    SettingsMp3,
+    SavingFileMp3,
+    DialogOnDelete {
 
     private val adapter = Adapter(::eventsAction)
     private val viewModel: RecordViewModel by viewModels {
@@ -40,81 +43,96 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        ActivityCompat.requestPermissions(
-            requireActivity(),
-            permissions,
-            REQUEST_RECORD_AUDIO_PERMISSION
-        )
         binding.recordRv.adapter = adapter
         viewModel.moduleItem.observe(viewLifecycleOwner) { items ->
-            adapter.submitList(items)
+            adapter.submitList(items.toList())
             setListenersForHolder()
+        }
+        viewModel.wasItemAdd.observe(viewLifecycleOwner) { pair ->
+            if (pair.first) {
+                adapter.submitList(pair.second.toList())
+            }
+        }
+        viewModel.shareLiveData.observe(viewLifecycleOwner) { intentData ->
+            intentData?.let {
+                startActivity(it)
+            }
         }
     }
 
-    // Requesting permission to RECORD_AUDIO
-    private var permissionToRecordAccepted = false
-    private var permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    override fun onSaveFile(fileName: String, listeners: DialogFragmentListeners) {
+        viewModel.onSaveFile(fileName, listeners)
+    }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        permissionToRecordAccepted = if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
-            grantResults[0] == PackageManager.PERMISSION_GRANTED
-        } else {
-            false
-        }
-        if (!permissionToRecordAccepted) {
-            activity
-                ?.supportFragmentManager
-                ?.beginTransaction()
-                ?.remove(this)?.commit()
-        }
+    override fun onCancelSave() {
+        viewModel.onCancelSave()
+    }
+
+    override fun saveSettings(recordSettings: RecordSettings) {
+
+    }
+
+    override fun onDeleteRecording(adapterPos: Int, audio: RecordAudio) {
+        viewModel.deleteRecording(audio, adapterPos)
     }
 
     private fun eventsAction(event: Events) {
         when (event) {
+
             Events.Pause -> {
                 viewModel.animationOnOff(false)
                 viewModel.pauseRecording()
             }
+
             Events.Play -> {
                 viewModel.animationOnOff(true)
                 viewModel.startPlayback()
             }
+
             Events.Record -> {
                 viewModel.animationOnOff(true)
                 viewModel.starRecording()
             }
+
             Events.Stop -> {
                 viewModel.animationOnOff(false)
                 viewModel.stopRecording()
                 viewModel.stopPlayback()
                 if (viewModel.startRecording.get()) {
-                    SaveFileDialogFragment.newInstance(this.viewModel).show(childFragmentManager, SaveFileDialogFragment.TAG)
+                    SaveFileDialogFragment.newInstance()
+                        .show(childFragmentManager, SaveFileDialogFragment.TAG)
                 }
             }
+
             Events.PausePlayback -> {
                 viewModel.animationOnOff(false)
                 viewModel.pausePlayback()
             }
+
             is Events.PlayRecordedAudio -> {
                 viewModel.animationOnOff(true)
+                viewModel.stopPlayback()
                 viewModel.startPlaybackFromRecordings(event.recordAudio)
             }
-            is Events.SeekBarAudio -> {
-                viewModel.setSeekBarPos(event.pos)
-            }
+
+            is Events.SeekBarAudio -> viewModel.setSeekBarPos(event.pos)
+
             is Events.SeekBarReflectOnTimer -> {
                 if (isListenerReadyForUpdateTickClock) {
                     viewModel.setSeekBarPosUpdateTimer(event.pos)
                 }
             }
+
             Events.OpenSettings -> {
-                SettingsDialogFragment.newInstance(this.viewModel).show(childFragmentManager, SettingsDialogFragment.TAG)
+                SettingsDialogFragment.newInstance(this.viewModel)
+                    .show(childFragmentManager, SettingsDialogFragment.TAG)
+            }
+
+            is Events.ShareRecordedAudio -> viewModel.shareMp3File(event.recordAudio)
+
+            is Events.DeleteRecordedAudio -> {
+                DeleteMp3FileDialogFragment.newInstance(event.recordAudio, event.adapterPosition)
+                    .show(childFragmentManager, DeleteMp3FileDialogFragment.TAG)
             }
         }
     }
@@ -128,7 +146,6 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>() {
 
     companion object {
         const val TAG = "RecordFragment"
-        private const val REQUEST_RECORD_AUDIO_PERMISSION = 200
         private const val ONE_SEC = 1000L
         fun newInstance() = RecordFragment()
     }

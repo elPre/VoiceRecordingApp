@@ -26,7 +26,7 @@ public class Mp3ClassConverter implements Mp3Converter {
         File pathToDoc = infoCovertToMp3.getApp().getExternalFilesDir(Environment.DIRECTORY_MUSIC);
 
         String filePath = pathToDoc.getPath() + "/audiorecord.m4a";
-        String outPutFile = pathToDoc.getPath() + "/"+infoCovertToMp3.getFileName()+".mp3";
+        String outPutFile = pathToDoc.getPath() + "/"+infoCovertToMp3.getFileName();
         String quality = String.valueOf(infoCovertToMp3.getRecordType().getMp3Quality());
 
         StringBuilder sb = new StringBuilder("-i ")
@@ -45,7 +45,7 @@ public class Mp3ClassConverter implements Mp3Converter {
             //alert the user the recording could not
         } else {
             Log.d("Mp3ClassConverter", String.format("Command execution failed with rc=%d and the output below.", rc));
-            Config.printLastCommandOutput(Log.INFO);
+            //Config.printLastCommandOutput(Log.INFO);
         }
         return mp3File;
     }

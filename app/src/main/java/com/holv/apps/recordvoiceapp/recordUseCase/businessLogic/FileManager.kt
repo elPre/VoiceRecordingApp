@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class FileManager(val app: Application) : FileLogic {
 
@@ -24,10 +25,10 @@ class FileManager(val app: Application) : FileLogic {
                 put(MediaStore.Audio.Media.DISPLAY_NAME, data.name)
                 put(MediaStore.Audio.Media.DATA, "$PATH_TO_EXTERNAL_STORAGE${data.name}")
                 put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg")
-                put(MediaStore.Audio.Media.ALBUM, ALBUM_NAME)
+                put(MediaStore.Audio.Media.ALBUM, NEW_ALBUM_NAME)
                 put(MediaStore.Audio.Media.DURATION, data.duration)
                 put(MediaStore.Audio.Media.SIZE, data.sizeFile)
-                put(MediaStore.Audio.Media.DATE_ADDED, data.date)
+                put(MediaStore.Audio.Media.DATE_ADDED, data.date.time)
             }
 
             app.contentResolver.insert(audioCollection, contentValues)?.also { uri ->
@@ -59,11 +60,12 @@ class FileManager(val app: Application) : FileLogic {
                 MediaStore.Audio.Media.DATE_ADDED,
                 MediaStore.Audio.Media.DATA
             )
+
             app.contentResolver.query(
                 audioCollection,
                 projection,
                 "${MediaStore.Audio.Media.ALBUM} = ?",
-                arrayOf(ALBUM_NAME),
+                arrayOf(NEW_ALBUM_NAME),
                 "${MediaStore.Audio.Media.DATE_ADDED} DESC"
             )?.use { cursor ->
                 val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
@@ -79,7 +81,7 @@ class FileManager(val app: Application) : FileLogic {
                     val album = cursor.getString(albumColumn)
                     val duration = cursor.getString(durationColumn)
                     val size = cursor.getString(sizeColumn)
-                    val dateAdded = cursor.getString(dateColumn)
+                    val dateAdded = cursor.getLong(dateColumn)
                     val data = cursor.getString(dataColumn)
                     val contentUri = ContentUris.withAppendedId(
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -93,8 +95,10 @@ class FileManager(val app: Application) : FileLogic {
                             name = displayName,
                             duration =  duration,
                             sizeFile = size,
-                            date = dateAdded,
-                            albumName = data
+                            date = Date(TimeUnit.SECONDS.toMillis(dateAdded.toString().toLong())),
+                            albumName = album,
+                            dataPlayback = data,
+                            contentUri = contentUri
                         )
                     )
                 }
@@ -112,7 +116,8 @@ class FileManager(val app: Application) : FileLogic {
             data.uri?.let {
                 app.contentResolver.delete(it,
                     "${MediaStore.Audio.Media.ALBUM} = ? and ${MediaStore.Audio.Media._ID} = ?",
-                    arrayOf(ALBUM_NAME, data.id.toString()))
+                    arrayOf(NEW_ALBUM_NAME, data.id.toString())
+                )
             }
         } catch (e: SecurityException) {
             return false
@@ -122,8 +127,8 @@ class FileManager(val app: Application) : FileLogic {
 
     companion object {
         const val TAG = "FileManager"
-        private const val ALBUM_NAME = "VoiceRecordAppAlbum1"
-        private const val PATH_TO_EXTERNAL_STORAGE = "/storage/emulated/0/Recordings/"
+        const val PATH_TO_EXTERNAL_STORAGE = "/storage/emulated/0/VoiceRecording/"
+        const val NEW_ALBUM_NAME  = "VoiceRecording"
     }
 
 }

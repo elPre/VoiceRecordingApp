@@ -28,7 +28,7 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
         }
 
     override fun playRecording(infoRecording: InfoRecording) {
-        val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+        val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
 
 //        Log.d("PlayAudio","current path to store audio files ---> $downloadFolder")
 //
@@ -110,7 +110,7 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
         }
         player?.release()
         player = null
-        return duration ?: timeInString(0)
+        return "$duration secs" ?: timeInString(0)
     }
 
     private fun timeInString(seconds: Int): String {

@@ -1,15 +1,17 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments
 
+import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import androidx.viewbinding.ViewBinding
 import com.holv.apps.recordvoiceapp.R
 
 abstract class BaseBindingDialogFragment<VB : ViewBinding> : DialogFragment() {
-
+    private var progressDialog: Dialog? = null
     private var _binding: ViewBinding? = null
     abstract fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?): VB
 
