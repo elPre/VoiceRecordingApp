@@ -8,7 +8,6 @@
     <string name="stop">stop</string>
     <string name="pause">pause</string>
     <string name="_00_00">00:00</string>
-    <string name="save_file_name">File Name</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
     <string name="file_name">Please type the file name</string>
@@ -19,10 +18,8 @@
     <string name="mp3_standard_high">Mp3 standard high (192 kilobytes)</string>
     <string name="mp3_high">Mp3 high (256 kilobytes)</string>
     <string name="mp3_highest">Mp3 highest (320 kilobytes)</string>
-
-    <string-array name="actions_recordings">
-        <item>share</item>
-        <item>delete</item>
-    </string-array>
+    <string name="menu_delete_recording">Delete</string>
+    <string name="menu_share_recording">Share</string>
+    <string name="save_file_name">Are you sure deleting %1$s</string>
 
 </resources>

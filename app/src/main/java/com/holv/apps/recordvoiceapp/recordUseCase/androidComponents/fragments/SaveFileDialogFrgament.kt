@@ -1,23 +1,29 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments
 
+import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.UiThread
 import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
 import com.holv.apps.recordvoiceapp.databinding.AskSaveFileDialogFragmentBinding
+import kotlinx.coroutines.*
+import kotlin.coroutines.suspendCoroutine
 
-class SaveFileDialogFragment : BaseBindingDialogFragment<AskSaveFileDialogFragmentBinding>() {
+class SaveFileDialogFragment : BaseBindingDialogFragment<AskSaveFileDialogFragmentBinding>(),
+    DialogFragmentListeners {
 
     private var listenerSaveFile : SavingFileMp3? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            listenerSaveFile = it.getSerializable(ARG_LISTENER) as SavingFileMp3?
-        }
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        listenerSaveFile = parentFragment as? SavingFileMp3
     }
 
     override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
@@ -26,16 +32,23 @@ class SaveFileDialogFragment : BaseBindingDialogFragment<AskSaveFileDialogFragme
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.btnSave.setOnClickListener {
-            if (binding.etSaveFileName.text.toString().isNotBlank()) {
-                listenerSaveFile?.onSaveFile(binding.etSaveFileName.text.toString())
+        with(binding) {
+            btnSave.setOnClickListener {
+                btnSave.isEnabled = false
+                if (etSaveFileName.text.toString().isNotBlank()) {
+                    pbSaveMp3.isVisible = true
+                    etSaveFileName.isEnabled = false
+                    btnCancel.isEnabled = false
+                    listenerSaveFile?.onSaveFile(binding.etSaveFileName.text.toString(), this@SaveFileDialogFragment)
+                } else {
+                    btnSave.isEnabled = true
+                }
+            }
+
+            btnCancel.setOnClickListener {
+                listenerSaveFile?.onCancelSave()
                 dismiss()
             }
-        }
-
-        binding.btnCancel.setOnClickListener {
-            listenerSaveFile?.onCancelSave()
-            dismiss()
         }
     }
 
@@ -46,12 +59,24 @@ class SaveFileDialogFragment : BaseBindingDialogFragment<AskSaveFileDialogFragme
         listenerSaveFile?.onCancelSave()
     }
 
+    override fun onConversionSuccess() {
+        dismiss()
+    }
+
+    override fun onConversionFailed() {
+        //show alert or snack acknowledge the user that the apps does not work on  that phone
+        dismiss()
+    }
+
+    override fun onSetProgressDone(progress: Int) {
+        activity?.runOnUiThread {
+            binding.pbSaveMp3.progress = progress
+        }
+    }
+
     companion object {
         const val TAG = "SaveFileDialogFragment"
-        private const val ARG_LISTENER =  "arg-listener"
-        fun newInstance(listener: SavingFileMp3) = SaveFileDialogFragment().apply {
-            arguments = bundleOf(ARG_LISTENER to listener)
-        }
+        fun newInstance() = SaveFileDialogFragment()
     }
 
 }

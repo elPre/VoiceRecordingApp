@@ -1,9 +1,8 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.businessLogic;
 
-import android.app.Application;
+import java.io.File;
 
 public interface Mp3Converter {
 
-    void convertToMp3(String fileName, String path, Application app);
-
+    File convertToMp3(InfoCovertToMp3 infoCovertToMp3);
 }

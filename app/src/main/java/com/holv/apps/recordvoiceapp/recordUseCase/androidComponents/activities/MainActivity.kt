@@ -1,7 +1,11 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.activities
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
+import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import com.holv.apps.recordvoiceapp.R
 import com.holv.apps.recordvoiceapp.databinding.ActivityMainBinding
@@ -10,11 +14,19 @@ import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.Re
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
 
+    private var permissionToRecordAccepted = false
+    private var permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE)
     override val bindingInflater: (LayoutInflater) -> ActivityMainBinding = ActivityMainBinding::inflate
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (savedInstanceState == null) {
+        ActivityCompat.requestPermissions(
+            this,
+            permissions,
+            REQUEST_RECORD_AUDIO_PERMISSION
+        )
+        if (savedInstanceState == null && permissionToRecordAccepted) {
             openFragment(RecordFragment.newInstance(),RecordFragment.TAG)
         }
     }
@@ -34,8 +46,28 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             super.onBackPressed()
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        permissionToRecordAccepted = if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
+            grantResults[0] == PackageManager.PERMISSION_GRANTED
+        } else {
+            false
+        }
+        if (!permissionToRecordAccepted) {
+            Log.d("MainActivity", "Show a snackbar of a dialog fragment ")
+            finish()
+        } else {
+            openFragment(RecordFragment.newInstance(),RecordFragment.TAG)
+        }
+    }
+
     companion object {
         private const val ONE_FRAGMENT = 1
+        private const val REQUEST_RECORD_AUDIO_PERMISSION = 200
     }
 }
 

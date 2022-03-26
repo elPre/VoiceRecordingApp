@@ -3,7 +3,7 @@ package com.holv.apps.recordvoiceapp.recordUseCase.businessLogic
 interface FileLogic : SaveFile, QueryFiles, DeleteFile
 
 interface SaveFile {
-    fun saveFile(data : AudioFileData)
+    fun saveFile(data : AudioFileData) : Boolean
 }
 
 interface QueryFiles {
@@ -11,5 +11,5 @@ interface QueryFiles {
 }
 
 interface DeleteFile {
-    fun deleteFile(data : AudioFileData)
+    fun deleteFile(data : AudioFileData) : Boolean
 }

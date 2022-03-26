@@ -18,6 +18,7 @@ class RecordingAudio(val app: Application): EasyRecording {
         // need to get the info that comes  in the recordingSettings
         // and set it into the MediaRecorder object
         recorder = MediaRecorder().apply {
+
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setOutputFile(fileName)
@@ -31,7 +32,6 @@ class RecordingAudio(val app: Application): EasyRecording {
             } catch (e: IOException) {
                 Log.e("RecordingAudio", "prepare() failed")
             }
-
             start()
         }
     }

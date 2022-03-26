@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="15dp"
             app:layout_constraintBottom_toBottomOf="@+id/iv_icon"
-            app:layout_constraintEnd_toStartOf="@+id/spinner"
+            app:layout_constraintEnd_toStartOf="@+id/ib_menu"
             app:layout_constraintLeft_toRightOf="@id/iv_icon"
             app:layout_constraintStart_toEndOf="@+id/iv_icon"
             app:layout_constraintTop_toTopOf="parent"
@@ -56,15 +56,30 @@
             app:layout_constraintLeft_toRightOf="@id/iv_icon"
             tools:text="5 mb" />
 
-        <Spinner
-            android:id="@+id/spinner"
-            android:layout_width="30dp"
-            android:layout_height="wrap_content"
+        <View
+            android:id="@+id/popup_anchor"
+            android:layout_width="215dp"
+            android:layout_height="16dp"
+            android:layout_marginEnd="16dp"
+            android:background="@color/transparent"
             app:layout_constraintBottom_toBottomOf="@+id/iv_icon"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <ImageButton
+            android:id="@+id/ib_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:elevation="4dp"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="4dp"
+            android:src="@drawable/ic_more_vert_black_24dp"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintLeft_toRightOf="@id/file_size"
             app:layout_constraintTop_toTopOf="parent"
-            android:entries="@array/actions_recordings" />
+            app:tint="@color/medGray"
+            tools:ignore="ContentDescription" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
