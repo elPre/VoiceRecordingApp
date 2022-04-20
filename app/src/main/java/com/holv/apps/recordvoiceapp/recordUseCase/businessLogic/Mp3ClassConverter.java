@@ -27,13 +27,30 @@ public class Mp3ClassConverter implements Mp3Converter {
 
         String filePath = pathToDoc.getPath() + "/audiorecord.m4a";
         String outPutFile = pathToDoc.getPath() + "/"+infoCovertToMp3.getFileName();
-        String quality = String.valueOf(infoCovertToMp3.getRecordType().getMp3Quality());
+        String quality = String.valueOf(infoCovertToMp3.getRecordType().getBiteRate());
 
         StringBuilder sb = new StringBuilder("-i ")
                 .append(filePath)
-                .append(" -c:v copy -c:a libmp3lame -q:a ")//need to pass the number through parameter
-                .append(quality).append(" ")
+                .append(" -c:v copy -c:a libmp3lame -ab ")//need to pass the number through parameter
+                .append(quality).append("k").append(" ")
                 .append(outPutFile);
+
+//        String quality = String.valueOf(infoCovertToMp3.getRecordType().getMp3Quality());
+//
+//        StringBuilder sb = new StringBuilder("-i ")
+//                .append(filePath)
+//                .append(" -c:v copy -c:a libmp3lame -q:a ")//need to pass the number through parameter
+//                .append(quality).append(" ")
+//                .append(outPutFile);
+
+
+//        StringBuilder sb = new StringBuilder("-i ")
+//                .append(filePath)
+//                .append(" -acodec libmp3lame -ab ")//need to pass the number through parameter
+//                .append(quality+"k").append(" ")
+//                .append(outPutFile);
+
+        Log.d("Mp3ClassConverter", "this is the command to execute --> "+ sb);
 
         int rc = FFmpeg.execute(sb.toString());
 

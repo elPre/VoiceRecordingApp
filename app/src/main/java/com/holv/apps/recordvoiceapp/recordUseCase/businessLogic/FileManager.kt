@@ -3,12 +3,11 @@ package com.holv.apps.recordvoiceapp.recordUseCase.businessLogic
 import android.app.Application
 import android.content.ContentUris
 import android.content.ContentValues
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.util.sdk29AndUp
-import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.LocalDateTime
+import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -112,17 +111,30 @@ class FileManager(val app: Application) : FileLogic {
     }
 
     override fun deleteFile(data : AudioFileData) : Boolean {
+        var delete = false
         try {
             data.uri?.let {
-                app.contentResolver.delete(it,
-                    "${MediaStore.Audio.Media.ALBUM} = ? and ${MediaStore.Audio.Media._ID} = ?",
-                    arrayOf(NEW_ALBUM_NAME, data.id.toString())
-                )
+                val deleteFile = app.contentResolver.delete(it, null, null)
+                if (deleteFile > 0) {
+                    delete = deleteFilePhysical(data)
+                }
             }
         } catch (e: SecurityException) {
             return false
         }
-        return true
+        return delete
+    }
+
+    private fun deleteFilePhysical(audioFile : AudioFileData): Boolean {
+        var wasDeleted = false
+        val root = File(Environment.getExternalStorageDirectory().path + "/$NEW_ALBUM_NAME/")
+        root.listFiles()?.iterator()?.forEachRemaining { file ->
+            if (file.name.equals(audioFile.name)) {
+                file.delete()
+                wasDeleted = true
+            }
+        }
+        return wasDeleted
     }
 
     companion object {

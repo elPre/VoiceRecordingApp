@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-parcelize'
+    id "com.google.protobuf" version "0.8.17"
 }
 
 android {
@@ -49,4 +50,25 @@ dependencies {
     implementation 'com.arthenica:mobile-ffmpeg-full:4.4'
     implementation "androidx.fragment:fragment-ktx:$fragment_version"
     implementation "androidx.datastore:datastore-preferences:1.0.0"
+    implementation  "androidx.datastore:datastore-core:1.0.0"
+    implementation  "com.google.protobuf:protobuf-javalite:3.18.0"
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.14.0"
+    }
+
+    // Generates the java Protobuf-lite code for the Protobufs in this project. See
+    // https://github.com/google/protobuf-gradle-plugin#customizing-protobuf-compilation
+    // for more information.
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java {
+                    option 'lite'
+                }
+            }
+        }
+    }
 }

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option java_package = "com.holv.apps.recordvoiceapp.recordUseCase.proto";
+option java_multiple_files = true;
+
+message RecordSettingsOption {
+  // filter for showing / hiding completed tasks
+  enum Filter {
+      MP3_SUPER_LOW = 0;
+      MP3_LOW = 1;
+      MP3_MEDIUM = 2;
+      MP3_MEDIUM_HIGH = 3;
+      MP3_HIGH = 4;
+      MP3_HIGHEST = 5;
+  }
+
+  Filter filter = 3;
+
+}

@@ -69,7 +69,7 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>(),
     }
 
     override fun saveSettings(recordSettings: RecordSettings) {
-
+        viewModel.saveSettings(recordSettings)
     }
 
     override fun onDeleteRecording(adapterPos: Int, audio: RecordAudio) {
@@ -124,7 +124,7 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>(),
             }
 
             Events.OpenSettings -> {
-                SettingsDialogFragment.newInstance(this.viewModel)
+                SettingsDialogFragment.newInstance()
                     .show(childFragmentManager, SettingsDialogFragment.TAG)
             }
 

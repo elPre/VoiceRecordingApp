@@ -2,7 +2,6 @@ package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels
 
 import android.app.Application
 import android.content.Intent
-import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
@@ -13,14 +12,16 @@ import androidx.recyclerview.widget.RecyclerView
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.*
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.pojos.RecordAudio
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.DialogFragmentListeners
-import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.RecordFragment
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.SettingsMp3
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.FireAnimation
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.ObtainHolderForActionEvent
 import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.*
 import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.RecordType
+import com.holv.apps.recordvoiceapp.recordUseCase.proto.ProtoRepository
+import com.holv.apps.recordvoiceapp.recordUseCase.proto.RecordSettingsOption
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
@@ -77,6 +78,8 @@ class RecordViewModel(val app: Application) : ViewModel(),
     //List that hold all  the holders
     private val list = mutableListOf<RecordItem>()
 
+    //Protobuf for saving MP3 settings
+    private val protoBuffersRepo = ProtoRepository(app)
 
     fun loadPage(isNewFragment: Boolean) = viewModelScope.launch(Dispatchers.IO) {
         if (isNewFragment) {
@@ -111,7 +114,9 @@ class RecordViewModel(val app: Application) : ViewModel(),
             isRecordingPause.set(false)
         } else {
             //get from the preferences data store the record type
-            recordAudio.startRecording(RecordSettings(RecordType.MP3_HIGHEST))
+            val recordSettings = getMp3Settings()
+            Log.d(TAG,"this is the recordings settings ${recordSettings.recordQuality}")
+            recordAudio.startRecording(recordSettings)
         }
     }
 
@@ -273,21 +278,21 @@ class RecordViewModel(val app: Application) : ViewModel(),
             val fileMp3: File?
             val ffmpeg: Mp3Converter = Mp3ClassConverter()
             val fileLogic: FileLogic = FileManager(app)
-            //10 %
+            //20 %
             listener.onSetProgressDone(20)
 
             // get from the new shared prrefences the mp3 quality recordtype
             val infoCovertToMp3 = InfoCovertToMp3(
                 app = app,
                 fileName = parseFileStringName(fileName),
-                recordType = RecordType.MP3_MEDIUM_HIGH
+                recordType = getMp3Settings().recordQuality
             )
             //30 %
             listener.onSetProgressDone(30)
             try {
                 listener.onSetProgressDone(40)
-                fileMp3 = ffmpeg.convertToMp3(infoCovertToMp3)
                 listener.onSetProgressDone(50)
+                fileMp3 = ffmpeg.convertToMp3(infoCovertToMp3)
             } catch (e: Exception) {
                 listener.onConversionFailed()
                 return@launch
@@ -329,13 +334,29 @@ class RecordViewModel(val app: Application) : ViewModel(),
     }
 
     fun deleteRecording(record: RecordAudio, position: Int) = viewModelScope.launch(Dispatchers.IO) {
-       list.removeAt(position)
-        moduleItem.postValue(list)
+        val fileLogic: FileLogic = FileManager(app)
+        record.id?.let {
+            val deleteAudio = AudioFileData(
+                id = record.id,
+                uri = record.contentUri,
+                sizeFile = record.size,
+                duration = record.duration,
+                name = record.name,
+                date = Date()
+            )
+            if (fileLogic.deleteFile(deleteAudio)) {
+                list.removeAt(position)
+                moduleItem.postValue(list)
+            }
+        }
     }
 
 
     override fun saveSettings(recordSettings: RecordSettings) {
-        Log.d(TAG, "saveSettings  -> ${recordSettings.recordQuality.name}")
+        viewModelScope.launch(Dispatchers.IO) {
+            val recordSettingsQuality = RecordType.values().indexOfFirst { it == recordSettings.recordQuality }
+            protoBuffersRepo.updateValue(recordSettingsQuality)
+        }
     }
 
     private fun queryInfoToLoadRecyclerView(): List<Records> {
@@ -353,7 +374,8 @@ class RecordViewModel(val app: Application) : ViewModel(),
                         duration = audioFileData.duration,
                         size = audioFileData.sizeFile,
                         playbackFile = "${audioFileData.dataPlayback}",
-                        contentUri = audioFileData.contentUri
+                        contentUri = audioFileData.contentUri,
+                        id = audioFileData.id
                     )
                 )
             )
@@ -452,6 +474,19 @@ class RecordViewModel(val app: Application) : ViewModel(),
             }
             val shareIntent = Intent.createChooser(sendIntent, null)
             shareLiveData.postValue(shareIntent)
+        }
+    }
+
+    private suspend fun getMp3Settings(): RecordSettings {
+        return when (protoBuffersRepo.readProto.first().filter) {
+            RecordSettingsOption.Filter.MP3_SUPER_LOW -> RecordSettings(RecordType.MP3_SUPER_LOW)
+            RecordSettingsOption.Filter.MP3_LOW -> RecordSettings(RecordType.MP3_LOW)
+            RecordSettingsOption.Filter.MP3_MEDIUM -> RecordSettings(RecordType.MP3_MEDIUM)
+            RecordSettingsOption.Filter.MP3_MEDIUM_HIGH -> RecordSettings(RecordType.MP3_MEDIUM_HIGH)
+            RecordSettingsOption.Filter.MP3_HIGH -> RecordSettings(RecordType.MP3_HIGH)
+            RecordSettingsOption.Filter.MP3_HIGHEST -> RecordSettings(RecordType.MP3_HIGHEST)
+            RecordSettingsOption.Filter.UNRECOGNIZED -> RecordSettings(RecordType.MP3_MEDIUM)
+            else -> RecordSettings(RecordType.MP3_MEDIUM_HIGH)
         }
     }
 
