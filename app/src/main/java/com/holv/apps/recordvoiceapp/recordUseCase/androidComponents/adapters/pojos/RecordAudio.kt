@@ -11,4 +11,5 @@ data class RecordAudio(
     val duration: String,
     val size: String,
     val playbackFile: String,
-    val contentUri: Uri? = null) : Parcelable
+    val contentUri: Uri? = null,
+    val id: Long?  = null) : Parcelable

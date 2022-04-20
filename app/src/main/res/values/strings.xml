@@ -21,5 +21,8 @@
     <string name="menu_delete_recording">Delete</string>
     <string name="menu_share_recording">Share</string>
     <string name="save_file_name">Are you sure deleting %1$s</string>
+    <string name="alive_channel_id" translatable="false">alive_channel_id</string>
+    <string name="alive_channel_name" translatable="false">alive_channel_name</string>
+    <string name="notification_description" translatable="false">Notification when device is alive</string>
 
 </resources>

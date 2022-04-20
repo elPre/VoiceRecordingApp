@@ -7,6 +7,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
+import com.holv.apps.recordvoiceapp.recordUseCase.proto.RecordSettingsOption
+import com.holv.apps.recordvoiceapp.recordUseCase.proto.UserRecordSettingsSerializer
 
 
 val ViewGroup.inflater: LayoutInflater
@@ -27,3 +31,8 @@ inline fun <T> sdk29AndUp(onSdk29: () -> T): T? {
         onSdk29()
     } else null
 }
+
+val Context.userPreferencesStore: DataStore<RecordSettingsOption> by dataStore(
+    fileName = "app_settings.pb",
+    serializer = UserRecordSettingsSerializer
+)
