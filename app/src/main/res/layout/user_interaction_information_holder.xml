@@ -6,7 +6,7 @@
 
     <TextView
         android:id="@+id/time_recording"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/start_clock"
         android:textSize="60sp"
@@ -17,6 +17,45 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/linear_record_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/time_recording"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/record_btn_rec"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/orange"
+            android:textColor="@color/orange"
+            android:text="REC"
+            android:gravity="center"/>
+
+        <Button
+            android:id="@+id/pause_btn_rec"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/orange"
+            android:textColor="@color/orange"
+            android:text="PAUSE"
+            android:gravity="center"/>
+
+        <Button
+            android:id="@+id/stop_btn_rec"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/orange"
+            android:textColor="@color/orange"
+            android:text="STOP"
+            android:gravity="center"/>
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
 
     <Button
         android:id="@+id/record_btn"

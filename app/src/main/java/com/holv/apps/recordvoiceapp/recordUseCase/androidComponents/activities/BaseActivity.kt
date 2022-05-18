@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewbinding.ViewBinding
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.util.NotificationUtils
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.util.PushNotificationChannel
 
 abstract class BaseActivity<VB : ViewBinding> : AppCompatActivity() {
 
@@ -18,6 +20,8 @@ abstract class BaseActivity<VB : ViewBinding> : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         _binding = bindingInflater.invoke(layoutInflater)
         setContentView(binding.root)
+        NotificationUtils.buildNotificationManager(applicationContext, PushNotificationChannel.RECORD)
+        NotificationUtils.buildNotificationManager(applicationContext, PushNotificationChannel.PLAYBACK)
     }
 
     override fun onDestroy() {

@@ -2,6 +2,7 @@ package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders
 
 import android.app.Activity
 import android.widget.SeekBar
+import androidx.core.view.isVisible
 import com.holv.apps.recordvoiceapp.R
 import com.holv.apps.recordvoiceapp.databinding.UserInteractionInformationHolderBinding
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.UserControls
@@ -61,7 +62,15 @@ class UserInteractionControlsHolder(
         view.seekBar.progress = 0
     }
 
-    override fun bind(item: UserControls) { }
+    override fun bind(item: UserControls) = with(view) {
+        //first time to bind the app the rec button has to be shown only
+        stopBtn.isVisible = false
+        playBtn.isVisible = false
+        view.seekBar.isVisible = false
+        view.duration.isVisible = false
+    }
+
+
 
     override fun onClockTick(msg: String) {
         activity?.runOnUiThread {
@@ -79,6 +88,15 @@ class UserInteractionControlsHolder(
 
     override fun updateSeekBar(updateSeekBar: Int) {
         view.seekBar.setProgress(updateSeekBar * 100, false)
+    }
+
+    override fun showHideSeekBar(show: Boolean) {
+        activity?.runOnUiThread {
+            view.seekBar.isVisible = show
+            view.duration.isVisible = show
+            view.stopBtn.isVisible = show
+
+        }
     }
 
     override fun onFinishPlayback() {

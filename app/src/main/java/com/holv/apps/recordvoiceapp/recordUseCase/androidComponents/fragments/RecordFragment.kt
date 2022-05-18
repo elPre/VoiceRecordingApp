@@ -1,6 +1,10 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments
 
 import android.app.Application
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -9,11 +13,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.holv.apps.recordvoiceapp.databinding.RecordFragmentBinding
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.Adapter
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.actionEvents.Events
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.pojos.RecordAudio
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.util.NotificationUtils
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels.RecordViewModel
+import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.BroadCastActions
 import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.RecordSettings
 
 
@@ -22,24 +29,46 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>(),
     SavingFileMp3,
     DialogOnDelete {
 
+    private val broadcastAudio = object : BroadcastReceiver() {
+        override fun onReceive(contxt: Context?, intent: Intent?) {
+            intent?.let {
+                val extraPlayback = it.getIntExtra(BroadCastActions.EXTRA_NOTIFICATION_ACTION, 0)
+                Log.d(TAG,"this is the value of ordinal $extraPlayback")
+                when (NotificationUtils.AudioNotificationActions.values()[extraPlayback]) {
+                    NotificationUtils.AudioNotificationActions.PLAY -> {
+                        Log.d(TAG,"Playback")
+                        viewModel.playbackFromNotification()
+                    }
+                    NotificationUtils.AudioNotificationActions.PAUSE -> {
+                        Log.d(TAG,"Pause")
+                        viewModel.pausePlayback()
+                    }
+                    NotificationUtils.AudioNotificationActions.STOP -> Log.d(TAG,"Stop")
+                    NotificationUtils.AudioNotificationActions.RECORD -> Log.d(TAG,"Record")
+                }
+            }
+        }
+    }
+
     private val adapter = Adapter(::eventsAction)
     private val viewModel: RecordViewModel by viewModels {
         RecordViewModel.Factory(requireContext().applicationContext as Application)
     }
     private var isListenerReadyForUpdateTickClock = false
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         retainInstance = true
         val isNewFragment = savedInstanceState == null
         viewModel.loadPage(isNewFragment)
+        LocalBroadcastManager.getInstance(requireContext().applicationContext).registerReceiver(broadcastAudio, IntentFilter(BroadCastActions.FILTER_INTENT))
     }
 
     override fun inflateBinding(
         inflater: LayoutInflater,
         container: ViewGroup?
     ) = RecordFragmentBinding.inflate(inflater, container, false)
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -58,6 +87,14 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>(),
                 startActivity(it)
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG,"REMOVING NOTIFICATION AND BROADDCAST")
+        //activity?.unregisterReceiver(broadcastAudio)
+        NotificationUtils.clearNotifications(requireContext().applicationContext)
+        LocalBroadcastManager.getInstance(requireContext().applicationContext).unregisterReceiver(broadcastAudio)
     }
 
     override fun onSaveFile(fileName: String, listeners: DialogFragmentListeners) {

@@ -21,8 +21,13 @@
     <string name="menu_delete_recording">Delete</string>
     <string name="menu_share_recording">Share</string>
     <string name="save_file_name">Are you sure deleting %1$s</string>
-    <string name="alive_channel_id" translatable="false">alive_channel_id</string>
-    <string name="alive_channel_name" translatable="false">alive_channel_name</string>
-    <string name="notification_description" translatable="false">Notification when device is alive</string>
+    <string name="record_channel_id" translatable="false">record_channel_id</string>
+    <string name="record_channel_name" translatable="false">record_channel_name</string>
+    <string name="record_notification_description" translatable="false">Notification when device is Recording</string>
+    <string name="playback_channel_id" translatable="false">playback_channel_id</string>
+    <string name="playback_channel_name" translatable="false">playback_channel_name</string>
+    <string name="playback_notification_description" translatable="false">Notification when device is Playing audio</string>
+    <string name="playback_notification_title">Playing audio %1$s</string>
+    <string name="record_notification_title">Recording audio</string>
 
 </resources>

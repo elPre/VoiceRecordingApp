@@ -7,15 +7,26 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.holv.apps.recordvoiceapp.R
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.activities.MainActivity
+import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.BroadCastActions
+
 
 object NotificationUtils {
 
-    private const val NOTIFICATION_GROUP = "SHOW_MEDICINES_NOTIFICATION"
-    private const val SUMMARY_ID = 0
     const val EXTRA_OPEN_NOTIFICATION = "OPEN_NOTIFICATION_ACTION"
     const val OPEN_NOTIFICATION_EXTRA_VALUE = 1
+    const val PLAY_AUDIO = "play-audio"
+    const val STOP_AUDIO = "stop-audio"
+    const val PAUSE_AUDIO = "pause-audio"
+    const val STOP_RECORDING = "stop-recording"
+
+    private const val NOTIFICATION_PLAYBACK_ID = 1
+    private const val NOTIFICATION_RECORD_ID = 2
+
 
     fun buildNotificationManager(
         context: Context,
@@ -32,7 +43,7 @@ object NotificationUtils {
                         NotificationChannel(
                             context.getString(channel.channelId),
                             name,
-                            NotificationManager.IMPORTANCE_HIGH
+                            NotificationManager.IMPORTANCE_LOW
                         ).apply {
                             description = context.getString(channel.channelDescId)
                             setShowBadge(true)
@@ -48,49 +59,80 @@ object NotificationUtils {
     }
 
     fun showRecordingNotification(context: Context, title: String, messageBody: String, clazz: Class<*>){
-
-    }
-
-    fun sendNotification(context: Context, title: String, messageBody: String, clazz: Class<*>) {
-
         val intent = Intent(context, clazz).apply {
             putExtra(EXTRA_OPEN_NOTIFICATION, OPEN_NOTIFICATION_EXTRA_VALUE)
         }
         val pendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
 
-        val builder = NotificationCompat.Builder(context, context.getString(PushNotificationChannel.ALIVE.channelId))
-//            .setSmallIcon(R.drawable.ic_round_notifications_24)
-//            .setColor(context.getColor(R.color.nutriGreen))
-//            .setContentTitle(context.getString(R.string.notification_title))
+        val builder = NotificationCompat.Builder(context, context.getString(PushNotificationChannel.PLAYBACK.channelId))
+            .setSmallIcon(R.drawable.ic_baseline_fiber_manual_record_24)
+            .setColor(context.getColor(R.color.primaryBlue))
+            .setContentTitle(context.getString(R.string.record_notification_title))
             .setContentText(messageBody)
             .setStyle(
                 NotificationCompat.BigTextStyle()
                     .bigText(messageBody)
             )
-            .setAutoCancel(true)
-            .setGroup(NOTIFICATION_GROUP)
+            .setAutoCancel(false)
             .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_MAX) //Important for heads-up notification
-            .setDefaults(NotificationCompat.DEFAULT_SOUND or NotificationCompat.DEFAULT_VIBRATE) //Important for heads-up notification
-
-        val summaryNotification = NotificationCompat.Builder(context, context.getString(PushNotificationChannel.ALIVE.channelId))
-            //set content text to support devices running API level < 24
-//            .setSmallIcon(R.drawable.ic_round_notifications_24)
-//            .setColor(context.getColor(R.color.nutriGreen))
-            //build summary info into InboxStyle template
-            .setStyle(NotificationCompat.InboxStyle())
-            //specify which group this notification belongs to
-            .setGroup(NOTIFICATION_GROUP)
-            //set this notification as the summary for the group
-            .setGroupSummary(true)
-            .setAutoCancel(true)
-            .setSilent(true)
-            .build()
+            .setOnlyAlertOnce(true)//shows notification for only first time
+            .setShowWhen(false)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
         NotificationManagerCompat.from(context).apply {
-            val notificationId = System.currentTimeMillis().toInt()
-            notify(notificationId + 1, builder.build())
-            notify(SUMMARY_ID, summaryNotification)
+            notify(NOTIFICATION_RECORD_ID, builder.build())
+        }
+    }
+
+    fun showPlaybackNotification(context: Context, title: String, messageBody: String, isPlayback: Boolean) {
+
+        val mediaSession  = MediaSessionCompat(context,"tag")
+
+        //Playback intent
+        val playbackIntent = Intent(context, BroadCastActions::class.java).apply {
+            action = AudioNotificationActions.PLAY.name
+            putExtra(BroadCastActions.EXTRA_NOTIFICATION_ACTION, AudioNotificationActions.PLAY.ordinal)
+        }
+        val playBackPendingIntent = PendingIntent.getBroadcast(context, 0, playbackIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        //Pause intent
+        val pausePlaybackIntent = Intent(context, BroadCastActions::class.java).apply {
+            action = AudioNotificationActions.PAUSE.name
+            putExtra(BroadCastActions.EXTRA_NOTIFICATION_ACTION, AudioNotificationActions.PAUSE.ordinal)
+        }
+        val pausePlaybackPendingIntent = PendingIntent.getBroadcast(context, 0, pausePlaybackIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        val buttonDrawable = if (isPlayback) R.drawable.ic_baseline_pause_24 else R.drawable.ic_baseline_play_arrow_24
+        val buttonIntent = if (isPlayback) pausePlaybackPendingIntent else playBackPendingIntent
+        val stringDescription = if (isPlayback) context.getString(R.string.pause) else context.getString(R.string.play)
+
+        val intent = Intent(context, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.action = Intent.ACTION_MAIN
+        intent.addCategory(Intent.CATEGORY_LAUNCHER)
+
+        val openAppIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        val builder = NotificationCompat.Builder(context, context.getString(PushNotificationChannel.PLAYBACK.channelId))
+            .setSmallIcon(R.drawable.ic_baseline_audio_file_24)
+            .setColor(context.getColor(R.color.primaryBlue))
+            .setContentTitle(String.format(context.getString(R.string.playback_notification_title), title))
+            .setContentText(messageBody)
+            .setStyle(
+                androidx.media.app.NotificationCompat.MediaStyle()
+                    .setShowActionsInCompactView(0)
+                    .setMediaSession(mediaSession.sessionToken)
+            )
+            .setContentIntent(openAppIntent)
+            .setAutoCancel(false)
+            .setOnlyAlertOnce(true)//shows notification for only first time
+            .setShowWhen(false)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .addAction(buttonDrawable, stringDescription, buttonIntent)
+
+
+        NotificationManagerCompat.from(context).apply {
+            notify(NOTIFICATION_PLAYBACK_ID, builder.build())
         }
 
     }
@@ -114,4 +156,12 @@ object NotificationUtils {
             true
         }
     }
+
+    enum class AudioNotificationActions {
+        PLAY,
+        PAUSE,
+        STOP,
+        RECORD
+    }
+
 }

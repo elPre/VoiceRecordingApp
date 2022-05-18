@@ -14,6 +14,7 @@ interface UpdateTickClock {
 interface SeekBarMax {
     fun setMaxSeekBar(maxString: String, maxInt: Int)
     fun updateSeekBar(updateSeekBar: Int)
+    fun showHideSeekBar(show: Boolean)
 }
 
 interface StopPlayback {

@@ -9,12 +9,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.activities.MainActivity
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.*
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.pojos.RecordAudio
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.DialogFragmentListeners
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.SettingsMp3
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.FireAnimation
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.ObtainHolderForActionEvent
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.util.NotificationUtils
 import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.*
 import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.RecordType
 import com.holv.apps.recordvoiceapp.recordUseCase.proto.ProtoRepository
@@ -30,7 +32,6 @@ import java.util.concurrent.atomic.AtomicLong
 
 class RecordViewModel(val app: Application) : ViewModel(),
     SetCountUpTimer,
-    FinishingPlayback,
     SettingsMp3 {
 
     //Business objects
@@ -81,6 +82,10 @@ class RecordViewModel(val app: Application) : ViewModel(),
     //Protobuf for saving MP3 settings
     private val protoBuffersRepo = ProtoRepository(app)
 
+    //Current audio playback notification
+    private var audioNamePlayback = ""
+    private var audioFilePlayback = ""
+
     fun loadPage(isNewFragment: Boolean) = viewModelScope.launch(Dispatchers.IO) {
         if (isNewFragment) {
             load()
@@ -106,6 +111,8 @@ class RecordViewModel(val app: Application) : ViewModel(),
     }
 
     fun starRecording() = viewModelScope.launch(Dispatchers.IO) {
+        checkIfRecordWasPaused()
+        listener.showHideSeekBar(show = false)
         startRecording.set(true)
         timeStamp = Date()
         clockTimer.countDownTimer.start()
@@ -114,13 +121,14 @@ class RecordViewModel(val app: Application) : ViewModel(),
             isRecordingPause.set(false)
         } else {
             //get from the preferences data store the record type
+            NotificationUtils.showRecordingNotification(app.applicationContext, "Recording message", "Here should be  a great message", MainActivity::class.java)
             val recordSettings = getMp3Settings()
-            Log.d(TAG,"this is the recordings settings ${recordSettings.recordQuality}")
             recordAudio.startRecording(recordSettings)
         }
     }
 
     fun stopRecording() = viewModelScope.launch(Dispatchers.IO) {
+        NotificationUtils.clearNotifications(app)
         recordAudio.stopRecording()
         clockTimer.countDownTimer.cancel()
     }
@@ -146,8 +154,11 @@ class RecordViewModel(val app: Application) : ViewModel(),
     }
 
     fun startPlaybackFromRecordings(playbackData: RecordAudio) = viewModelScope.launch(Dispatchers.IO) {
+        listener.showHideSeekBar(show = true)
         startRecording.set(false)
         if (isPlaying.get().not()) {
+            audioNamePlayback = playbackData.name
+            audioFilePlayback = playbackData.playbackFile
             if (isPlaybackPause.get()) {
                 playAudio.seekWhilePause(seekWhilePausePlayback)
             }
@@ -156,7 +167,18 @@ class RecordViewModel(val app: Application) : ViewModel(),
             isPlaying.set(true)
             clockTimer.isPlaying.set(true)
             getAudioCurrentSeconds()
+            NotificationUtils.showPlaybackNotification(app.applicationContext, audioNamePlayback, "Here should be  a great message", isPlayback = true)
         }
+    }
+
+    fun playbackFromNotification() = viewModelScope.launch(Dispatchers.IO) {
+        listener.showHideSeekBar(show = true)
+        startRecording.set(false)
+        isPlaying.set(true)
+        playAudio.setListenerSeconds(this@RecordViewModel)
+        getAudioCurrentSeconds()
+        playAudio.playbackFromNotification()
+        NotificationUtils.showPlaybackNotification(app.applicationContext, audioNamePlayback, "Here should be  a great message", isPlayback = true)
     }
 
     private fun getAudioCurrentSeconds() = viewModelScope.launch(Dispatchers.IO) {
@@ -179,19 +201,31 @@ class RecordViewModel(val app: Application) : ViewModel(),
         listener.updateSeekBar(0)
     }
 
-    override fun onFinishPlayback() = viewModelScope.launch(Dispatchers.IO) {
-        isPlaying.set(false)
-        clockTimer.isPlaying.set(false)
-        playAudio.stopPlayBack()
-        clockTimer.resetTimerVariables()
-        listener.onClockTick("00:00")
+    fun checkIfRecordWasPaused() = viewModelScope.launch(Dispatchers.IO) {
+        if (isPlaying.get()) {
+            stopPlayback()
+            isPlaying.set(false)
+        } else {
+            if (isRecordingPause.get().not()) {
+                stopPlayback()
+            }
+        }
     }
 
+//    override fun onFinishPlayback() = viewModelScope.launch(Dispatchers.IO) {
+//        isPlaying.set(false)
+//        clockTimer.isPlaying.set(false)
+//        playAudio.stopPlayBack()
+//        clockTimer.resetTimerVariables()
+//        listener.onClockTick("00:00")
+//    }
+
     fun pausePlayback() = viewModelScope.launch(Dispatchers.IO) {
-        playAudio.pausePlayback()
         isPlaying.set(false)
+        playAudio.pausePlayback()
         clockTimer.isPlaying.set(false)
         isPlaybackPause.set(true)
+        NotificationUtils.showPlaybackNotification(app.applicationContext, audioNamePlayback, "Here should be  a great message", isPlayback = false)
     }
 
 
@@ -245,6 +279,8 @@ class RecordViewModel(val app: Application) : ViewModel(),
             clockTimer.resetTimerVariables()
             if (isLooperOn.get()) {
                 startPlayback()
+            } else {
+                NotificationUtils.clearNotifications(app.applicationContext)
             }
         }
     }
