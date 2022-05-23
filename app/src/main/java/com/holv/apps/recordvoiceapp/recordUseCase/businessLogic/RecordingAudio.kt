@@ -30,10 +30,10 @@ class RecordingAudio(val app: Application): EasyRecording {
 
             try {
                 prepare()
+                start()
             } catch (e: IOException) {
                 Log.e("RecordingAudio", "prepare() failed")
             }
-            start()
         }
     }
 

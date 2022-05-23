@@ -112,6 +112,7 @@ class RecordViewModel(val app: Application) : ViewModel(),
 
     fun starRecording() = viewModelScope.launch(Dispatchers.IO) {
         checkIfRecordWasPaused()
+        listener.onRecording(isRecording = true)
         listener.showHideSeekBar(show = false)
         startRecording.set(true)
         timeStamp = Date()
@@ -140,28 +141,31 @@ class RecordViewModel(val app: Application) : ViewModel(),
     }
 
     fun startPlayback() = viewModelScope.launch(Dispatchers.IO) {
-        startRecording.set(false)
-        if (isPlaying.get().not()) {
-            if (isPlaybackPause.get()) {
-                playAudio.seekWhilePause(seekWhilePausePlayback)
+        if (isPlaybackPause.get()) {
+            playbackFromNotification()
+        } else {
+            startRecording.set(false)
+            if (isPlaying.get().not()) {
+                if (isPlaybackPause.get()) {
+                    playAudio.seekWhilePause(seekWhilePausePlayback)
+                }
+                playAudio.setListenerSeconds(this@RecordViewModel)
+                playAudio.playRecording(InfoRecording(audioPlayback))
+                isPlaying.set(true)
+                clockTimer.isPlaying.set(true)
+                getAudioCurrentSeconds()
             }
-            playAudio.setListenerSeconds(this@RecordViewModel)
-            playAudio.playRecording(InfoRecording(audioPlayback))
-            isPlaying.set(true)
-            clockTimer.isPlaying.set(true)
-            getAudioCurrentSeconds()
         }
+
     }
 
     fun startPlaybackFromRecordings(playbackData: RecordAudio) = viewModelScope.launch(Dispatchers.IO) {
+        listener.onRecording(isRecording = false)
         listener.showHideSeekBar(show = true)
         startRecording.set(false)
         if (isPlaying.get().not()) {
             audioNamePlayback = playbackData.name
             audioFilePlayback = playbackData.playbackFile
-            if (isPlaybackPause.get()) {
-                playAudio.seekWhilePause(seekWhilePausePlayback)
-            }
             playAudio.setListenerSeconds(this@RecordViewModel)
             playAudio.playRecording(InfoRecording(playbackData.playbackFile))
             isPlaying.set(true)

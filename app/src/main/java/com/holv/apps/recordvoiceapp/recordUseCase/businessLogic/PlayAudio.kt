@@ -56,6 +56,7 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
         pausePlayback = 0
         player?.release()
         player = null
+        Log.d("PlayAudio","stopPlayBack $pausePlayback")
     }
 
     override fun pausePlayback() {
@@ -66,6 +67,7 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
 
     override fun seekWhilePause(pos: Int) {
         pausePlayback = pos
+        Log.d("PlayAudio","seekWhilePause $pausePlayback")
     }
 
     override fun setListener(listenerDuration: SeekBarMax) {

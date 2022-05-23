@@ -33,16 +33,9 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>(),
         override fun onReceive(contxt: Context?, intent: Intent?) {
             intent?.let {
                 val extraPlayback = it.getIntExtra(BroadCastActions.EXTRA_NOTIFICATION_ACTION, 0)
-                Log.d(TAG,"this is the value of ordinal $extraPlayback")
                 when (NotificationUtils.AudioNotificationActions.values()[extraPlayback]) {
-                    NotificationUtils.AudioNotificationActions.PLAY -> {
-                        Log.d(TAG,"Playback")
-                        viewModel.playbackFromNotification()
-                    }
-                    NotificationUtils.AudioNotificationActions.PAUSE -> {
-                        Log.d(TAG,"Pause")
-                        viewModel.pausePlayback()
-                    }
+                    NotificationUtils.AudioNotificationActions.PLAY -> viewModel.playbackFromNotification()
+                    NotificationUtils.AudioNotificationActions.PAUSE -> viewModel.pausePlayback()
                     NotificationUtils.AudioNotificationActions.STOP -> Log.d(TAG,"Stop")
                     NotificationUtils.AudioNotificationActions.RECORD -> Log.d(TAG,"Record")
                 }
