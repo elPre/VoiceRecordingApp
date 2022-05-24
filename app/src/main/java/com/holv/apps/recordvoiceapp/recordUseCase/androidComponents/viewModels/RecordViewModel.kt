@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView
+import com.holv.apps.recordvoiceapp.R
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.activities.MainActivity
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.*
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.pojos.RecordAudio
@@ -16,6 +17,7 @@ import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.Di
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.SettingsMp3
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.FireAnimation
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.ObtainHolderForActionEvent
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.ShowLegendOnRecordings
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.util.NotificationUtils
 import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.*
 import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.RecordType
@@ -46,6 +48,7 @@ class RecordViewModel(val app: Application) : ViewModel(),
     //listeners that lives on the holders
     private lateinit var listener: ObtainHolderForActionEvent
     private lateinit var fireAnimationListener: FireAnimation
+    private lateinit var legendListener: ShowLegendOnRecordings
 
     //Load the whole page that is a RecyclerView
     val moduleItem = MutableLiveData<MutableList<RecordItem>>()
@@ -122,9 +125,10 @@ class RecordViewModel(val app: Application) : ViewModel(),
             isRecordingPause.set(false)
         } else {
             //get from the preferences data store the record type
-            NotificationUtils.showRecordingNotification(app.applicationContext, "Recording message", "Here should be  a great message", MainActivity::class.java)
+            NotificationUtils.showRecordingNotification(app.applicationContext, app.getString(R.string.record_notification_title), "", MainActivity::class.java)
             val recordSettings = getMp3Settings()
             recordAudio.startRecording(recordSettings)
+            legendListener.setupLegend(app.getString(R.string.record_notification_title))
         }
     }
 
@@ -150,7 +154,7 @@ class RecordViewModel(val app: Application) : ViewModel(),
                     playAudio.seekWhilePause(seekWhilePausePlayback)
                 }
                 playAudio.setListenerSeconds(this@RecordViewModel)
-                playAudio.playRecording(InfoRecording(audioPlayback))
+                playAudio.playRecording(InfoRecording(audioFilePlayback))
                 isPlaying.set(true)
                 clockTimer.isPlaying.set(true)
                 getAudioCurrentSeconds()
@@ -164,6 +168,7 @@ class RecordViewModel(val app: Application) : ViewModel(),
         listener.showHideSeekBar(show = true)
         startRecording.set(false)
         if (isPlaying.get().not()) {
+            legendListener.setupLegend(playbackData.name)
             audioNamePlayback = playbackData.name
             audioFilePlayback = playbackData.playbackFile
             playAudio.setListenerSeconds(this@RecordViewModel)
@@ -171,7 +176,7 @@ class RecordViewModel(val app: Application) : ViewModel(),
             isPlaying.set(true)
             clockTimer.isPlaying.set(true)
             getAudioCurrentSeconds()
-            NotificationUtils.showPlaybackNotification(app.applicationContext, audioNamePlayback, "Here should be  a great message", isPlayback = true)
+            NotificationUtils.showPlaybackNotification(app.applicationContext, audioNamePlayback, "", isPlayback = true)
         }
     }
 
@@ -182,7 +187,8 @@ class RecordViewModel(val app: Application) : ViewModel(),
         playAudio.setListenerSeconds(this@RecordViewModel)
         getAudioCurrentSeconds()
         playAudio.playbackFromNotification()
-        NotificationUtils.showPlaybackNotification(app.applicationContext, audioNamePlayback, "Here should be  a great message", isPlayback = true)
+        legendListener.setupLegend(audioNamePlayback)
+        NotificationUtils.showPlaybackNotification(app.applicationContext, audioNamePlayback, "", isPlayback = true)
     }
 
     private fun getAudioCurrentSeconds() = viewModelScope.launch(Dispatchers.IO) {
@@ -203,9 +209,10 @@ class RecordViewModel(val app: Application) : ViewModel(),
         clockTimer.resetTimerVariables()
         listener.onClockTick("00:00")
         listener.updateSeekBar(0)
+        isPlaybackPause.set(false)
     }
 
-    fun checkIfRecordWasPaused() = viewModelScope.launch(Dispatchers.IO) {
+    private fun checkIfRecordWasPaused() = viewModelScope.launch(Dispatchers.IO) {
         if (isPlaying.get()) {
             stopPlayback()
             isPlaying.set(false)
@@ -216,20 +223,12 @@ class RecordViewModel(val app: Application) : ViewModel(),
         }
     }
 
-//    override fun onFinishPlayback() = viewModelScope.launch(Dispatchers.IO) {
-//        isPlaying.set(false)
-//        clockTimer.isPlaying.set(false)
-//        playAudio.stopPlayBack()
-//        clockTimer.resetTimerVariables()
-//        listener.onClockTick("00:00")
-//    }
-
     fun pausePlayback() = viewModelScope.launch(Dispatchers.IO) {
         isPlaying.set(false)
         playAudio.pausePlayback()
         clockTimer.isPlaying.set(false)
         isPlaybackPause.set(true)
-        NotificationUtils.showPlaybackNotification(app.applicationContext, audioNamePlayback, "Here should be  a great message", isPlayback = false)
+        NotificationUtils.showPlaybackNotification(app.applicationContext, audioNamePlayback, "", isPlayback = false)
     }
 
 
@@ -297,8 +296,8 @@ class RecordViewModel(val app: Application) : ViewModel(),
         val itemCount = recyclerView.adapter?.itemCount
         if (itemCount != null && itemCount > 0) {
             val animationListener = recyclerView.findViewHolderForAdapterPosition(ANIMATION_HOLDER)
-            val userControlsListener =
-                recyclerView.findViewHolderForAdapterPosition(USER_CONTROLS_HOLDER)
+            val userControlsListener = recyclerView.findViewHolderForAdapterPosition(USER_CONTROLS_HOLDER)
+            val recordingLegendListener = recyclerView.findViewHolderForAdapterPosition(RECORDINGS_LEGEND_HOLDER)
             if (animationListener is FireAnimation) {
                 fireAnimationListener = animationListener
                 clockTimer.fireAnimationListener = fireAnimationListener
@@ -307,6 +306,9 @@ class RecordViewModel(val app: Application) : ViewModel(),
                 playAudio.setListener(userControlsListener)
                 listener = userControlsListener
                 clockTimer.listener = listener
+            }
+            if (recordingLegendListener is ShowLegendOnRecordings) {
+                legendListener = recordingLegendListener
             }
         }
     }
@@ -541,7 +543,8 @@ class RecordViewModel(val app: Application) : ViewModel(),
         const val TAG = "RecordViewModel"
         private const val ANIMATION_HOLDER = 1
         private const val USER_CONTROLS_HOLDER = 2
-        private const val HALF_SECOND = 1000L
+        private const val RECORDINGS_LEGEND_HOLDER = 3
+        private const val HALF_SECOND = 400L
         private const val ONE_HOUR_IN_SECS = 3600
         private const val MP3 = ".mp3"
         private const val AUDIO_MIME_TYPE = "audio/mpeg"

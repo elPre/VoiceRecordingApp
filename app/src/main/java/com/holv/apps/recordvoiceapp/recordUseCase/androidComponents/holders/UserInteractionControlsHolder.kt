@@ -16,9 +16,8 @@ class UserInteractionControlsHolder(
     ObtainHolderForActionEvent {
 
     private val activity = view.root.context as? Activity
-    private var maxSeekBarValue = 0
 
-    private val seekBarListener = object :  SeekBar.OnSeekBarChangeListener {
+    private val seekBarListener = object : SeekBar.OnSeekBarChangeListener {
         override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
             action(Events.SeekBarReflectOnTimer(progress.div(100)))
         }
@@ -38,13 +37,12 @@ class UserInteractionControlsHolder(
         view.seekBar.isVisible = false
         view.duration.isVisible = false
 
-        val resource = view.root.resources
         view.playBtn.setOnClickListener {
             action(Events.Play)
         }
 
         view.recordBtn.setOnClickListener {
-            view.playBtn.isEnabled =  false
+            view.playBtn.isEnabled = false
             action(Events.Record)
         }
         view.stopBtn.setOnClickListener {
@@ -69,8 +67,7 @@ class UserInteractionControlsHolder(
 
     override fun setMaxSeekBar(maxString: String, maxInt: Int) {
         activity?.runOnUiThread {
-            maxSeekBarValue = maxInt * 100
-            view.seekBar.max = maxSeekBarValue // allows the user to have a great seek bar experience
+            view.seekBar.max = maxInt * 100 // allows the user to have a great seek bar experience
             view.duration.text = maxString
         }
     }
@@ -87,8 +84,7 @@ class UserInteractionControlsHolder(
     }
 
     override fun onFinishPlayback() {
-        activity?.runOnUiThread {
-        }
+
     }
 
     override fun onRecording(isRecording: Boolean) {

@@ -1,7 +1,6 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.businessLogic
 
 import android.app.Application
-import android.media.AudioFormat
 import android.media.MediaRecorder
 import android.os.Environment
 import android.util.Log
@@ -15,9 +14,6 @@ class RecordingAudio(val app: Application): EasyRecording {
     override fun startRecording(recordSettings: RecordSettings) {
         val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
         fileName = "$downloadFolder/$TMP_FILE_M4A_NAME"
-        // need to get the info that comes  in the recordingSettings
-        // and set it into the MediaRecorder object
-        Log.d("RecordingAudio","this is the settings for recording m4a file -> ${recordSettings.recordQuality} == ${recordSettings.recordQuality.biteRate}  == ${recordSettings.recordQuality.sampleRate}")
         recorder = MediaRecorder().apply {
 
             setAudioSource(MediaRecorder.AudioSource.MIC)

@@ -20,8 +20,8 @@
 
     <ImageView
         android:id="@+id/record_btn"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
+        android:layout_width="54dp"
+        android:layout_height="54dp"
         android:layout_marginTop="10dp"
         android:src="@drawable/ic_baseline_fiber_manual_record_24"
         app:tint="@color/red"
@@ -30,8 +30,8 @@
 
     <ImageView
         android:id="@+id/play_btn"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
+        android:layout_width="54dp"
+        android:layout_height="54dp"
         android:layout_marginTop="10dp"
         android:src="@drawable/ic_baseline_play_arrow_24"
         app:layout_constraintEnd_toStartOf="@+id/view_center"
@@ -48,8 +48,8 @@
 
     <ImageView
         android:id="@+id/stop_btn"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
+        android:layout_width="54dp"
+        android:layout_height="54dp"
         android:layout_marginTop="10dp"
         android:src="@drawable/ic_baseline_stop_24"
         app:tint="@color/black"
@@ -59,8 +59,8 @@
 
     <ImageView
         android:id="@+id/pause_btn"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
+        android:layout_width="54dp"
+        android:layout_height="54dp"
         android:layout_marginTop="10dp"
         android:src="@drawable/ic_baseline_pause_24"
         app:tint="@color/black"
