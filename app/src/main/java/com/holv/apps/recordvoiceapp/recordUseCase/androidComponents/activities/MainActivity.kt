@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.android.gms.ads.MobileAds
 import com.holv.apps.recordvoiceapp.R
 import com.holv.apps.recordvoiceapp.databinding.ActivityMainBinding
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.RecordFragment
@@ -36,6 +37,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             Log.d(TAG,"here ask if the fragment exist put that  one otherwise  create a new  one")
             openFragment(RecordFragment.newInstance(),RecordFragment.TAG)
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Initialize the Mobile Ads SDK with an AdMob App ID.
+        MobileAds.initialize(this) {}
     }
 
     private fun openFragment(fragment: Fragment, tag: String) {
