@@ -1,7 +1,9 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders
 
 import android.app.Activity
+import android.util.Log
 import android.widget.SeekBar
+import androidx.core.view.isVisible
 import com.holv.apps.recordvoiceapp.R
 import com.holv.apps.recordvoiceapp.databinding.UserInteractionInformationHolderBinding
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.UserControls
@@ -14,9 +16,8 @@ class UserInteractionControlsHolder(
     ObtainHolderForActionEvent {
 
     private val activity = view.root.context as? Activity
-    private var maxSeekBarValue = 0
 
-    private val seekBarListener = object :  SeekBar.OnSeekBarChangeListener {
+    private val seekBarListener = object : SeekBar.OnSeekBarChangeListener {
         override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
             action(Events.SeekBarReflectOnTimer(progress.div(100)))
         }
@@ -29,39 +30,34 @@ class UserInteractionControlsHolder(
     }
 
     init {
-        val resource = view.root.resources
+
+        view.stopBtn.isVisible = true
+        view.playBtn.isVisible = true
+        view.pauseBtn.isVisible = true
+        view.seekBar.isVisible = false
+        view.duration.isVisible = false
+
         view.playBtn.setOnClickListener {
-            val text = view.playBtn.text
-            if (text.equals(resource.getString(R.string.play))) {
-                view.playBtn.text = resource.getString(R.string.pause)
-                action(Events.Play)
-            } else {
-                view.playBtn.text = resource.getString(R.string.play)
-                action(Events.PausePlayback)
-            }
-
+            action(Events.Play)
         }
-        view.recordBtn.setOnClickListener {
-            val text = view.recordBtn.text
-            if (text.equals(resource.getString(R.string.record))) {
-                view.recordBtn.text = resource.getString(R.string.pause)
-                action(Events.Record)
-            } else {
-                view.recordBtn.text = resource.getString(R.string.record)
-                action(Events.Pause)
-            }
 
+        view.recordBtn.setOnClickListener {
+            view.playBtn.isEnabled = false
+            action(Events.Record)
         }
         view.stopBtn.setOnClickListener {
-            view.playBtn.text = resource.getString(R.string.play)
-            view.recordBtn.text = resource.getString(R.string.record)
             action(Events.Stop)
         }
+
+        view.pauseBtn.setOnClickListener {
+            action(Events.Pause)
+        }
+
         view.seekBar.setOnSeekBarChangeListener(seekBarListener)
         view.seekBar.progress = 0
     }
 
-    override fun bind(item: UserControls) { }
+    override fun bind(item: UserControls){ }
 
     override fun onClockTick(msg: String) {
         activity?.runOnUiThread {
@@ -71,8 +67,7 @@ class UserInteractionControlsHolder(
 
     override fun setMaxSeekBar(maxString: String, maxInt: Int) {
         activity?.runOnUiThread {
-            maxSeekBarValue = maxInt * 100
-            view.seekBar.max = maxSeekBarValue // allows the user to have a great seek bar experience
+            view.seekBar.max = maxInt * 100 // allows the user to have a great seek bar experience
             view.duration.text = maxString
         }
     }
@@ -81,9 +76,27 @@ class UserInteractionControlsHolder(
         view.seekBar.setProgress(updateSeekBar * 100, false)
     }
 
-    override fun onFinishPlayback() {
+    override fun showHideSeekBar(show: Boolean) {
         activity?.runOnUiThread {
-            view.playBtn.text = view.root.resources.getString(R.string.play)
+            view.seekBar.isVisible = show
+            view.duration.isVisible = show
+        }
+    }
+
+    override fun onFinishPlayback() {
+
+    }
+
+    override fun onRecording(isRecording: Boolean) {
+        if (isRecording) {
+            view.pauseBtn.setOnClickListener {
+                action(Events.Pause)
+            }
+        } else {
+            view.pauseBtn.setOnClickListener {
+                view.playBtn.isEnabled = true
+                action(Events.PausePlayback)
+            }
         }
     }
 }

@@ -3,18 +3,18 @@ package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels
 import android.app.Application
 import android.content.Intent
 import android.os.Environment
-import android.util.Log
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import androidx.recyclerview.widget.RecyclerView
+import com.holv.apps.recordvoiceapp.R
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.activities.MainActivity
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.*
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.pojos.RecordAudio
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.DialogFragmentListeners
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.SettingsMp3
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.FireAnimation
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.ObtainHolderForActionEvent
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders.ShowLegendOnRecordings
+import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.util.NotificationUtils
 import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.*
 import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.RecordType
 import com.holv.apps.recordvoiceapp.recordUseCase.proto.ProtoRepository
@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicLong
 
 class RecordViewModel(val app: Application) : ViewModel(),
     SetCountUpTimer,
-    FinishingPlayback,
     SettingsMp3 {
 
     //Business objects
@@ -45,6 +44,7 @@ class RecordViewModel(val app: Application) : ViewModel(),
     //listeners that lives on the holders
     private lateinit var listener: ObtainHolderForActionEvent
     private lateinit var fireAnimationListener: FireAnimation
+    private lateinit var legendListener: ShowLegendOnRecordings
 
     //Load the whole page that is a RecyclerView
     val moduleItem = MutableLiveData<MutableList<RecordItem>>()
@@ -69,17 +69,15 @@ class RecordViewModel(val app: Application) : ViewModel(),
     //loop all the play list
     private var loopAllThePlayList = AtomicBoolean(false)
 
-    //current audio to play back
-    private var audioPlayback: String = ""
-
-    //the list of recordings
-    private var listOfRecordings = listOf<AudioFileData>()
-
     //List that hold all  the holders
     private val list = mutableListOf<RecordItem>()
 
     //Protobuf for saving MP3 settings
     private val protoBuffersRepo = ProtoRepository(app)
+
+    //Current audio playback notification
+    private var audioNamePlayback = ""
+    private var audioFilePlayback = ""
 
     fun loadPage(isNewFragment: Boolean) = viewModelScope.launch(Dispatchers.IO) {
         if (isNewFragment) {
@@ -106,6 +104,9 @@ class RecordViewModel(val app: Application) : ViewModel(),
     }
 
     fun starRecording() = viewModelScope.launch(Dispatchers.IO) {
+        checkIfRecordWasPaused()
+        listener.onRecording(isRecording = true)
+        listener.showHideSeekBar(show = false)
         startRecording.set(true)
         timeStamp = Date()
         clockTimer.countDownTimer.start()
@@ -114,13 +115,15 @@ class RecordViewModel(val app: Application) : ViewModel(),
             isRecordingPause.set(false)
         } else {
             //get from the preferences data store the record type
+            NotificationUtils.showRecordingNotification(app.applicationContext, app.getString(R.string.record_notification_title), "", MainActivity::class.java)
             val recordSettings = getMp3Settings()
-            Log.d(TAG,"this is the recordings settings ${recordSettings.recordQuality}")
             recordAudio.startRecording(recordSettings)
+            legendListener.setupLegend(app.getString(R.string.record_notification_title))
         }
     }
 
     fun stopRecording() = viewModelScope.launch(Dispatchers.IO) {
+        NotificationUtils.clearNotifications(app)
         recordAudio.stopRecording()
         clockTimer.countDownTimer.cancel()
     }
@@ -132,31 +135,50 @@ class RecordViewModel(val app: Application) : ViewModel(),
     }
 
     fun startPlayback() = viewModelScope.launch(Dispatchers.IO) {
-        startRecording.set(false)
-        if (isPlaying.get().not()) {
-            if (isPlaybackPause.get()) {
-                playAudio.seekWhilePause(seekWhilePausePlayback)
+        if (isPlaybackPause.get()) {
+            playbackFromNotification()
+        } else {
+            startRecording.set(false)
+            if (isPlaying.get().not()) {
+                if (isPlaybackPause.get()) {
+                    playAudio.seekWhilePause(seekWhilePausePlayback)
+                }
+                playAudio.setListenerSeconds(this@RecordViewModel)
+                playAudio.playRecording(InfoRecording(audioFilePlayback))
+                isPlaying.set(true)
+                clockTimer.isPlaying.set(true)
+                getAudioCurrentSeconds()
             }
-            playAudio.setListenerSeconds(this@RecordViewModel)
-            playAudio.playRecording(InfoRecording(audioPlayback))
-            isPlaying.set(true)
-            clockTimer.isPlaying.set(true)
-            getAudioCurrentSeconds()
         }
+
     }
 
     fun startPlaybackFromRecordings(playbackData: RecordAudio) = viewModelScope.launch(Dispatchers.IO) {
+        listener.onRecording(isRecording = false)
+        listener.showHideSeekBar(show = true)
         startRecording.set(false)
         if (isPlaying.get().not()) {
-            if (isPlaybackPause.get()) {
-                playAudio.seekWhilePause(seekWhilePausePlayback)
-            }
+            legendListener.setupLegend(playbackData.name)
+            audioNamePlayback = playbackData.name
+            audioFilePlayback = playbackData.playbackFile
             playAudio.setListenerSeconds(this@RecordViewModel)
             playAudio.playRecording(InfoRecording(playbackData.playbackFile))
             isPlaying.set(true)
             clockTimer.isPlaying.set(true)
             getAudioCurrentSeconds()
+            NotificationUtils.showPlaybackNotification(app.applicationContext, audioNamePlayback, "", isPlayback = true)
         }
+    }
+
+    fun playbackFromNotification() = viewModelScope.launch(Dispatchers.IO) {
+        listener.showHideSeekBar(show = true)
+        startRecording.set(false)
+        isPlaying.set(true)
+        playAudio.setListenerSeconds(this@RecordViewModel)
+        getAudioCurrentSeconds()
+        playAudio.playbackFromNotification()
+        legendListener.setupLegend(audioNamePlayback)
+        NotificationUtils.showPlaybackNotification(app.applicationContext, audioNamePlayback, "", isPlayback = true)
     }
 
     private fun getAudioCurrentSeconds() = viewModelScope.launch(Dispatchers.IO) {
@@ -171,27 +193,32 @@ class RecordViewModel(val app: Application) : ViewModel(),
         clockTimer.totalSecondsToPlayback = sec.toLong()
     }
 
-    fun stopPlayback() = viewModelScope.launch(Dispatchers.IO) {
+    fun stopPlayback() {
         isPlaying.set(false)
         playAudio.stopPlayBack()
         clockTimer.resetTimerVariables()
         listener.onClockTick("00:00")
         listener.updateSeekBar(0)
+        isPlaybackPause.set(false)
     }
 
-    override fun onFinishPlayback() = viewModelScope.launch(Dispatchers.IO) {
-        isPlaying.set(false)
-        clockTimer.isPlaying.set(false)
-        playAudio.stopPlayBack()
-        clockTimer.resetTimerVariables()
-        listener.onClockTick("00:00")
+    fun clearNotification() = viewModelScope.launch(Dispatchers.IO) {
+        NotificationUtils.clearNotifications(app)
+    }
+
+    private fun checkIfRecordWasPaused() = viewModelScope.launch(Dispatchers.IO) {
+        if (isPlaying.get()) {
+            stopPlayback()
+            isPlaying.set(false)
+        }
     }
 
     fun pausePlayback() = viewModelScope.launch(Dispatchers.IO) {
-        playAudio.pausePlayback()
         isPlaying.set(false)
+        playAudio.pausePlayback()
         clockTimer.isPlaying.set(false)
         isPlaybackPause.set(true)
+        NotificationUtils.showPlaybackNotification(app.applicationContext, audioNamePlayback, "", isPlayback = false)
     }
 
 
@@ -245,6 +272,8 @@ class RecordViewModel(val app: Application) : ViewModel(),
             clockTimer.resetTimerVariables()
             if (isLooperOn.get()) {
                 startPlayback()
+            } else {
+                NotificationUtils.clearNotifications(app.applicationContext)
             }
         }
     }
@@ -257,8 +286,8 @@ class RecordViewModel(val app: Application) : ViewModel(),
         val itemCount = recyclerView.adapter?.itemCount
         if (itemCount != null && itemCount > 0) {
             val animationListener = recyclerView.findViewHolderForAdapterPosition(ANIMATION_HOLDER)
-            val userControlsListener =
-                recyclerView.findViewHolderForAdapterPosition(USER_CONTROLS_HOLDER)
+            val userControlsListener = recyclerView.findViewHolderForAdapterPosition(USER_CONTROLS_HOLDER)
+            val recordingLegendListener = recyclerView.findViewHolderForAdapterPosition(RECORDINGS_LEGEND_HOLDER)
             if (animationListener is FireAnimation) {
                 fireAnimationListener = animationListener
                 clockTimer.fireAnimationListener = fireAnimationListener
@@ -267,6 +296,9 @@ class RecordViewModel(val app: Application) : ViewModel(),
                 playAudio.setListener(userControlsListener)
                 listener = userControlsListener
                 clockTimer.listener = listener
+            }
+            if (recordingLegendListener is ShowLegendOnRecordings) {
+                legendListener = recordingLegendListener
             }
         }
     }
@@ -302,10 +334,11 @@ class RecordViewModel(val app: Application) : ViewModel(),
 
             //70 %
             listener.onSetProgressDone(70)
+            val fileExtension = if (fileMp3.extension.contains("mp3")) "mp3" else "m4a"
             val saveFileAudio = AudioFileData(
                 id = Date().time,
                 uri = null,
-                name = "$fileName.mp3",
+                name = "$fileName.$fileExtension",
                 duration = playAudio.getDurationPlayback(fileMp3.path),
                 sizeFile = getFileSizeCurrentRecording(fileMp3),
                 date = timeStamp ?: Date(),
@@ -329,7 +362,6 @@ class RecordViewModel(val app: Application) : ViewModel(),
     }
 
     fun onCancelSave() {
-        Log.d(TAG, "onCancelSave")
         startRecording.set(false)
     }
 
@@ -455,8 +487,8 @@ class RecordViewModel(val app: Application) : ViewModel(),
         val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
         downloadFolder?.listFiles()?.iterator()?.forEachRemaining { file ->
             file?.let {
-                if (it.name.contains(MP3)) {
-                    it.delete()
+                when {
+                    it.name.contains(MP3) || it.name.contains(M4A) -> it.delete()
                 }
             }
         }
@@ -485,8 +517,14 @@ class RecordViewModel(val app: Application) : ViewModel(),
             RecordSettingsOption.Filter.MP3_MEDIUM_HIGH -> RecordSettings(RecordType.MP3_MEDIUM_HIGH)
             RecordSettingsOption.Filter.MP3_HIGH -> RecordSettings(RecordType.MP3_HIGH)
             RecordSettingsOption.Filter.MP3_HIGHEST -> RecordSettings(RecordType.MP3_HIGHEST)
-            RecordSettingsOption.Filter.UNRECOGNIZED -> RecordSettings(RecordType.MP3_MEDIUM)
-            else -> RecordSettings(RecordType.MP3_MEDIUM_HIGH)
+            RecordSettingsOption.Filter.M4A_SUPER_LOW -> RecordSettings(RecordType.M4A_SUPER_LOW)
+            RecordSettingsOption.Filter.M4A_LOW -> RecordSettings(RecordType.M4A_LOW)
+            RecordSettingsOption.Filter.M4A_MEDIUM -> RecordSettings(RecordType.M4A_MEDIUM)
+            RecordSettingsOption.Filter.M4A_MEDIUM_HIGH -> RecordSettings(RecordType.M4A_MEDIUM_HIGH)
+            RecordSettingsOption.Filter.M4A_HIGH -> RecordSettings(RecordType.M4A_HIGH)
+            RecordSettingsOption.Filter.M4A_HIGHEST -> RecordSettings(RecordType.M4A_HIGHEST)
+            RecordSettingsOption.Filter.UNRECOGNIZED -> RecordSettings(RecordType.M4A_MEDIUM)
+            else -> RecordSettings(RecordType.M4A_MEDIUM_HIGH)
         }
     }
 
@@ -501,9 +539,11 @@ class RecordViewModel(val app: Application) : ViewModel(),
         const val TAG = "RecordViewModel"
         private const val ANIMATION_HOLDER = 1
         private const val USER_CONTROLS_HOLDER = 2
-        private const val HALF_SECOND = 1000L
+        private const val RECORDINGS_LEGEND_HOLDER = 3
+        private const val HALF_SECOND = 400L
         private const val ONE_HOUR_IN_SECS = 3600
         private const val MP3 = ".mp3"
+        private const val M4A = ".m4a"
         private const val AUDIO_MIME_TYPE = "audio/mpeg"
     }
 

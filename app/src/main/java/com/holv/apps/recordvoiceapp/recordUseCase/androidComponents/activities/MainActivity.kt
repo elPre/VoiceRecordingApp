@@ -1,12 +1,18 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.activities
 
 import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.android.gms.ads.MobileAds
 import com.holv.apps.recordvoiceapp.R
 import com.holv.apps.recordvoiceapp.databinding.ActivityMainBinding
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.RecordFragment
@@ -18,7 +24,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private var permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE)
     override val bindingInflater: (LayoutInflater) -> ActivityMainBinding = ActivityMainBinding::inflate
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ActivityCompat.requestPermissions(
@@ -26,9 +31,18 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             permissions,
             REQUEST_RECORD_AUDIO_PERMISSION
         )
+        Log.d(TAG,"getting the intent ${intent.action}")
         if (savedInstanceState == null && permissionToRecordAccepted) {
+            Log.d(TAG,"brand new fragment")
+            Log.d(TAG,"here ask if the fragment exist put that  one otherwise  create a new  one")
             openFragment(RecordFragment.newInstance(),RecordFragment.TAG)
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Initialize the Mobile Ads SDK with an AdMob App ID.
+        MobileAds.initialize(this) {}
     }
 
     private fun openFragment(fragment: Fragment, tag: String) {
@@ -66,6 +80,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
 
     companion object {
+        const val TAG = "MainActivity"
         private const val ONE_FRAGMENT = 1
         private const val REQUEST_RECORD_AUDIO_PERMISSION = 200
     }

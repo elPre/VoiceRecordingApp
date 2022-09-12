@@ -14,7 +14,7 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
     private var fileName: String = ""
     private var player: MediaPlayer? = null
     private var listenerDuration: SeekBarMax? = null
-    private var listenerCountUpTime :GetDurationFromAudio? = null
+    private var listenerCountUpTime: GetDurationFromAudio? = null
     private var pausePlayback: Int? = 0
 
     private val MediaPlayer.seconds: Int
@@ -28,18 +28,9 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
         }
 
     override fun playRecording(infoRecording: InfoRecording) {
-        val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
 
-//        Log.d("PlayAudio","current path to store audio files ---> $downloadFolder")
-//
-//        downloadFolder?.listFiles()?.iterator()?.forEachRemaining {
-//            val bytes = it.length()
-//            val kilobytes = bytes/1024
-//            val megabytes = kilobytes/1024
-//            Log.d("PlayAudio","--> name = ${it.name} file size = $megabytes mb and in kilobytes = $kilobytes kbs")
-//        }
-        fileName = if(infoRecording.path.isNotEmpty()) infoRecording.path else "$downloadFolder/$TMP_FILE_M4A_NAME"
-        Log.d("PlayAudio", "the player is playing $fileName")
+        val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+        fileName = infoRecording.path.ifEmpty { "$downloadFolder/$TMP_FILE_M4A_NAME" }
         player = MediaPlayer().apply {
             try {
                 setDataSource(fileName)
@@ -77,7 +68,7 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
     }
 
     override fun setListener(listenerDuration: SeekBarMax) {
-        this.listenerDuration =  listenerDuration
+        this.listenerDuration = listenerDuration
     }
 
     override fun setListenerSeconds(secondsDuration: GetDurationFromAudio) {
@@ -89,7 +80,6 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
     }
 
     override fun onSeekToSpecificPos(pos: Int) {
-        Log.e("PlayAudio", "new pos to seekTo = $pos")
         player?.seekTo(pos * 1000)
     }
 
@@ -111,6 +101,28 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
         player?.release()
         player = null
         return "$duration secs" ?: timeInString(0)
+    }
+
+    override fun playbackFromNotification() {
+        player?.reset()
+        player?.apply {
+            try {
+                setDataSource(fileName)
+                prepare()
+                start()
+                listenerDuration?.setMaxSeekBar(timeInString(seconds), seconds)
+                listenerCountUpTime?.getAudioDuration(seconds)
+
+            } catch (e: IOException) {
+                Log.e("PlayAudio", "message -> ${e.message}")
+                e.printStackTrace()
+            }
+        }
+        if (pausePlayback != null && pausePlayback!! > 0) {
+            val seekToPos = pausePlayback!! + 1
+            player?.seekTo(seekToPos * 1000)
+            pausePlayback = 0
+        }
     }
 
     private fun timeInString(seconds: Int): String {

@@ -49,7 +49,13 @@ class SettingsDialogFragment : BaseBindingDialogFragment<SettingsRecordingDialog
                     rbQualityStandard.id -> RecordSettings(RecordType.MP3_MEDIUM)
                     rbQualityStandardHigh.id -> RecordSettings(RecordType.MP3_MEDIUM_HIGH)
                     rbQualitySuperLow.id -> RecordSettings(RecordType.MP3_SUPER_LOW)
-                    else -> RecordSettings(RecordType.MP3_MEDIUM)
+                    rbQualityHighM4a.id -> RecordSettings(RecordType.M4A_HIGH)
+                    rbQualityHighestM4a.id -> RecordSettings(RecordType.M4A_HIGHEST)
+                    rbQualityLowM4a.id -> RecordSettings(RecordType.M4A_LOW)
+                    rbQualityStandardM4a.id -> RecordSettings(RecordType.M4A_MEDIUM)
+                    rbQualityStandardHighM4a.id -> RecordSettings(RecordType.M4A_MEDIUM_HIGH)
+                    rbQualitySuperLowM4a.id -> RecordSettings(RecordType.M4A_SUPER_LOW)
+                    else -> RecordSettings(RecordType.M4A_MEDIUM)
                 }
             }
 
@@ -72,6 +78,12 @@ class SettingsDialogFragment : BaseBindingDialogFragment<SettingsRecordingDialog
                     RecordType.MP3_MEDIUM_HIGH -> binding.rbQualityStandardHigh.id
                     RecordType.MP3_HIGH -> binding.rbQualityHigh.id
                     RecordType.MP3_HIGHEST -> binding.rbQualityHighest.id
+                    RecordType.M4A_SUPER_LOW -> binding.rbQualitySuperLowM4a.id
+                    RecordType.M4A_LOW -> binding.rbQualityLowM4a.id
+                    RecordType.M4A_MEDIUM -> binding.rbQualityStandardM4a.id
+                    RecordType.M4A_MEDIUM_HIGH -> binding.rbQualityStandardHighM4a.id
+                    RecordType.M4A_HIGH -> binding.rbQualityHighM4a.id
+                    RecordType.M4A_HIGHEST -> binding.rbQualityHighestM4a.id
                 }
                 binding.rgOptions.check(radioIdCheck)
             }

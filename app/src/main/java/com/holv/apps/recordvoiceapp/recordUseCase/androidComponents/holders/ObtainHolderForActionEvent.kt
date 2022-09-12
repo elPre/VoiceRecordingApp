@@ -1,6 +1,6 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders
 
-interface ObtainHolderForActionEvent: UpdateTickClock, SeekBarMax, FinishPlayback
+interface ObtainHolderForActionEvent: UpdateTickClock, SeekBarMax, FinishPlayback, RecordUserControl
 
 
 interface FireAnimation {
@@ -14,6 +14,7 @@ interface UpdateTickClock {
 interface SeekBarMax {
     fun setMaxSeekBar(maxString: String, maxInt: Int)
     fun updateSeekBar(updateSeekBar: Int)
+    fun showHideSeekBar(show: Boolean)
 }
 
 interface StopPlayback {
@@ -22,4 +23,8 @@ interface StopPlayback {
 
 interface FinishPlayback {
     fun onFinishPlayback()
+}
+
+interface RecordUserControl {
+    fun onRecording(isRecording: Boolean)
 }

@@ -11,18 +11,29 @@
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
     <string name="file_name">Please type the file name</string>
-    <string name="select_the_audio_quality">Select Audio Quality</string>
+    <string name="select_the_audio_quality">Select Audio Quality, M4A no need conversion so faster to record</string>
     <string name="mp3_super_low">Mp3 super low (64 kilobytes)</string>
     <string name="mp3_low">Mp3 low (96 kilobytes)</string>
     <string name="mp3_standard">Mp3 standard (128 kilobytes)</string>
     <string name="mp3_standard_high">Mp3 standard high (192 kilobytes)</string>
     <string name="mp3_high">Mp3 high (256 kilobytes)</string>
     <string name="mp3_highest">Mp3 highest (320 kilobytes)</string>
+    <string name="m4a_super_low">M4A super low (64 kilobytes)</string>
+    <string name="m4a_low">M4A low (96 kilobytes)</string>
+    <string name="m4a_standard">M4A standard (128 kilobytes)</string>
+    <string name="m4a_standard_high">M4A standard high (192 kilobytes)</string>
+    <string name="m4a_high">M4A high (256 kilobytes)</string>
+    <string name="m4a_highest">M4A highest (320 kilobytes)</string>
     <string name="menu_delete_recording">Delete</string>
     <string name="menu_share_recording">Share</string>
     <string name="save_file_name">Are you sure deleting %1$s</string>
-    <string name="alive_channel_id" translatable="false">alive_channel_id</string>
-    <string name="alive_channel_name" translatable="false">alive_channel_name</string>
-    <string name="notification_description" translatable="false">Notification when device is alive</string>
+    <string name="record_channel_id" translatable="false">record_channel_id</string>
+    <string name="record_channel_name" translatable="false">record_channel_name</string>
+    <string name="record_notification_description" translatable="false">Notification when device is Recording</string>
+    <string name="playback_channel_id" translatable="false">playback_channel_id</string>
+    <string name="playback_channel_name" translatable="false">playback_channel_name</string>
+    <string name="playback_notification_description" translatable="false">Notification when device is Playing audio</string>
+    <string name="playback_notification_title">Playing audio %1$s</string>
+    <string name="record_notification_title">Recording audio</string>
 
 </resources>

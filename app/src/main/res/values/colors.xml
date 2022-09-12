@@ -12,6 +12,7 @@
     <color name="medGray">#706F73</color>
     <color name="blue_settings">#2490FF</color>
     <color name="progressOverlayBackground">#BF000000</color>
+    <color name="red">#FF0000</color>
 
     <color name="primaryBlue">#F76E11</color>
     <color name="halfBlueCTA">#FFB078</color>

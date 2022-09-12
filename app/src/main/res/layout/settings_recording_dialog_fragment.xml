@@ -7,7 +7,6 @@
     android:layout_marginTop="50dp"
     android:layout_marginStart="15dp"
     android:layout_marginEnd="15dp">
-
     <TextView
         android:id="@+id/tv_select_quality_label"
         android:layout_width="wrap_content"
@@ -74,6 +73,49 @@
             android:layout_height="wrap_content"
             android:textSize="15sp"
             android:text="@string/mp3_highest" />
+
+        <RadioButton
+            android:id="@+id/rb_quality_super_low_m4a"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:text="@string/m4a_super_low" />
+
+        <RadioButton
+            android:id="@+id/rb_quality_low_m4a"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:text="@string/m4a_low" />
+
+        <RadioButton
+            android:id="@+id/rb_quality_standard_m4a"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:text="@string/m4a_standard" />
+
+        <RadioButton
+            android:id="@+id/rb_quality_standard_high_m4a"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:text="@string/m4a_standard_high" />
+
+        <RadioButton
+            android:id="@+id/rb_quality_high_m4a"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:text="@string/m4a_high" />
+
+
+        <RadioButton
+            android:id="@+id/rb_quality_highest_m4a"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:text="@string/m4a_highest" />
 
     </RadioGroup>
 
