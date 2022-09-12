@@ -17,13 +17,6 @@ import com.holv.apps.recordvoiceapp.recordUseCase.businessLogic.BroadCastActions
 
 object NotificationUtils {
 
-    const val EXTRA_OPEN_NOTIFICATION = "OPEN_NOTIFICATION_ACTION"
-    const val OPEN_NOTIFICATION_EXTRA_VALUE = 1
-    const val PLAY_AUDIO = "play-audio"
-    const val STOP_AUDIO = "stop-audio"
-    const val PAUSE_AUDIO = "pause-audio"
-    const val STOP_RECORDING = "stop-recording"
-
     private const val NOTIFICATION_PLAYBACK_ID = 1
     private const val NOTIFICATION_RECORD_ID = 2
 
@@ -59,10 +52,14 @@ object NotificationUtils {
     }
 
     fun showRecordingNotification(context: Context, title: String, messageBody: String, clazz: Class<*>){
-        val intent = Intent(context, clazz).apply {
-            putExtra(EXTRA_OPEN_NOTIFICATION, OPEN_NOTIFICATION_EXTRA_VALUE)
-        }
-        val pendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
+
+        val intent = Intent(context, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.action = Intent.ACTION_MAIN
+        intent.addCategory(Intent.CATEGORY_LAUNCHER)
+
+        val openAppIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
 
         val builder = NotificationCompat.Builder(context, context.getString(PushNotificationChannel.PLAYBACK.channelId))
             .setSmallIcon(R.drawable.ic_baseline_fiber_manual_record_24)
@@ -74,7 +71,7 @@ object NotificationUtils {
                     .bigText(messageBody)
             )
             .setAutoCancel(false)
-            .setContentIntent(pendingIntent)
+            .setContentIntent(openAppIntent)
             .setOnlyAlertOnce(true)//shows notification for only first time
             .setShowWhen(false)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

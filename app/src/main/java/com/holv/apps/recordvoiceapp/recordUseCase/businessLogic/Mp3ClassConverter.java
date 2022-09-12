@@ -3,20 +3,16 @@ package com.holv.apps.recordvoiceapp.recordUseCase.businessLogic;
 import static com.arthenica.mobileffmpeg.Config.RETURN_CODE_CANCEL;
 import static com.arthenica.mobileffmpeg.Config.RETURN_CODE_SUCCESS;
 
-import android.app.Application;
 import android.os.Environment;
 import android.util.Log;
 
-import com.arthenica.mobileffmpeg.Config;
 import com.arthenica.mobileffmpeg.FFmpeg;
-import com.arthenica.mobileffmpeg.FFprobe;
-import com.arthenica.mobileffmpeg.MediaInformation;
 
 import java.io.File;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 
 public class Mp3ClassConverter implements Mp3Converter {
 
@@ -36,7 +32,14 @@ public class Mp3ClassConverter implements Mp3Converter {
                 .append(quality).append("k").append(" ")
                 .append(outPutFile);
 
-        int rc = FFmpeg.execute(sb.toString());
+        int rc = -1;
+        if (infoCovertToMp3.getRecordType().name().contains("MP3")) {
+            rc = FFmpeg.execute(sb.toString());
+        } else {
+            String fileName = changeFileExtension(infoCovertToMp3);
+            mp3File = renameFileNameAndDeleteItself(pathToDoc, fileName);
+        }
+
 
         if (rc == RETURN_CODE_SUCCESS) {
             Log.d("Mp3ClassConverter", "File converted to MP3");
@@ -50,4 +53,28 @@ public class Mp3ClassConverter implements Mp3Converter {
         }
         return mp3File;
     }
+
+    private String changeFileExtension(InfoCovertToMp3 info) {
+        String fileName = info.getFileName();
+        if (!info.getRecordType().name().contains("MP3")){
+            fileName = fileName.replace(".mp3", ".m4a");
+        }
+        return fileName;
+    }
+
+    private File renameFileNameAndDeleteItself(File pathToDoc, String fileName) {
+        File destination = null;
+        try{
+            File source = new File(pathToDoc.getPath() + "/audiorecord.m4a");
+            destination = new File(pathToDoc.getPath() + "/"+ fileName);
+            FileChannel sourceChannel = new FileInputStream(source).getChannel();
+            FileChannel destChannel = new FileOutputStream(destination).getChannel();
+            destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
+            source.delete();
+        } catch (Exception e) {
+            Log.e("Mp3ClassConverter","Could not rename the file " + e.getMessage());
+        }
+        return destination;
+    }
+
 }

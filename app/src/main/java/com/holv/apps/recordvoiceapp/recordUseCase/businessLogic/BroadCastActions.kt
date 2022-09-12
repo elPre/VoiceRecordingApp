@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.util.Log
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 class BroadCastActions : BroadcastReceiver() {
@@ -17,7 +16,6 @@ class BroadCastActions : BroadcastReceiver() {
                     IntentFilter(FILTER_INTENT)
                 }
             }?.also {
-                Log.d(TAG,"sending local broadcast $it")
                 LocalBroadcastManager.getInstance(cxt).sendBroadcast(it)
             }
         }

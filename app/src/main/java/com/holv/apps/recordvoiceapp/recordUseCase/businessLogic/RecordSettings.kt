@@ -11,4 +11,10 @@ enum class RecordType(val biteRate:  Int, val sampleRate: Int, val mp3Quality: I
     MP3_MEDIUM_HIGH (192000, 44100, 4),
     MP3_HIGH (256000, 44100, 2),
     MP3_HIGHEST (320000, 44100, 0),
+    M4A_SUPER_LOW (64000, 44100, 9),
+    M4A_LOW (96000, 44100, 8),
+    M4A_MEDIUM (128000, 44100, 6),
+    M4A_MEDIUM_HIGH (192000, 44100, 4),
+    M4A_HIGH (256000, 44100, 2),
+    M4A_HIGHEST (320000, 44100, 0),
 }

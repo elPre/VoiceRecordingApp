@@ -8,7 +8,6 @@ import android.content.IntentFilter
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -36,8 +35,8 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>(),
                 when (NotificationUtils.AudioNotificationActions.values()[extraPlayback]) {
                     NotificationUtils.AudioNotificationActions.PLAY -> viewModel.playbackFromNotification()
                     NotificationUtils.AudioNotificationActions.PAUSE -> viewModel.pausePlayback()
-                    NotificationUtils.AudioNotificationActions.STOP -> Log.d(TAG,"Stop")
-                    NotificationUtils.AudioNotificationActions.RECORD -> Log.d(TAG,"Record")
+                    NotificationUtils.AudioNotificationActions.STOP -> Unit
+                    NotificationUtils.AudioNotificationActions.RECORD -> Unit
                 }
             }
         }
@@ -84,8 +83,6 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>(),
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG,"REMOVING NOTIFICATION AND BROADDCAST")
-        //activity?.unregisterReceiver(broadcastAudio)
         NotificationUtils.clearNotifications(requireContext().applicationContext)
         LocalBroadcastManager.getInstance(requireContext().applicationContext).unregisterReceiver(broadcastAudio)
     }
@@ -121,6 +118,7 @@ class RecordFragment : BaseFragment<RecordFragmentBinding>(),
 
             Events.Record -> {
                 viewModel.animationOnOff(true)
+                viewModel.clearNotification()
                 viewModel.starRecording()
             }
 

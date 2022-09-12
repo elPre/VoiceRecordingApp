@@ -56,18 +56,15 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
         pausePlayback = 0
         player?.release()
         player = null
-        Log.d("PlayAudio","stopPlayBack $pausePlayback")
     }
 
     override fun pausePlayback() {
-        Log.d("PlayAudio","pausePlayback")
         pausePlayback = player?.currentSeconds
         player?.pause()
     }
 
     override fun seekWhilePause(pos: Int) {
         pausePlayback = pos
-        Log.d("PlayAudio","seekWhilePause $pausePlayback")
     }
 
     override fun setListener(listenerDuration: SeekBarMax) {
@@ -107,11 +104,9 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
     }
 
     override fun playbackFromNotification() {
-        Log.d("PlayAudio","playbackFromNotification $player")
         player?.reset()
         player?.apply {
             try {
-                Log.d("PlayAudio","playbackFromNotification $fileName")
                 setDataSource(fileName)
                 prepare()
                 start()

@@ -12,6 +12,12 @@ message RecordSettingsOption {
       MP3_MEDIUM_HIGH = 3;
       MP3_HIGH = 4;
       MP3_HIGHEST = 5;
+      M4A_SUPER_LOW = 6;
+      M4A_LOW = 7;
+      M4A_MEDIUM = 8;
+      M4A_MEDIUM_HIGH = 9;
+      M4A_HIGH = 10;
+      M4A_HIGHEST = 11;
   }
 
   Filter filter = 3;

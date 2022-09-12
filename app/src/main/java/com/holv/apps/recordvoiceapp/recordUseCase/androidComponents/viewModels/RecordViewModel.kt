@@ -3,7 +3,6 @@ package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.viewModels
 import android.app.Application
 import android.content.Intent
 import android.os.Environment
-import android.util.Log
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.RecyclerView
 import com.holv.apps.recordvoiceapp.R
@@ -69,12 +68,6 @@ class RecordViewModel(val app: Application) : ViewModel(),
 
     //loop all the play list
     private var loopAllThePlayList = AtomicBoolean(false)
-
-    //current audio to play back
-    private var audioPlayback: String = ""
-
-    //the list of recordings
-    private var listOfRecordings = listOf<AudioFileData>()
 
     //List that hold all  the holders
     private val list = mutableListOf<RecordItem>()
@@ -200,7 +193,7 @@ class RecordViewModel(val app: Application) : ViewModel(),
         clockTimer.totalSecondsToPlayback = sec.toLong()
     }
 
-    fun stopPlayback() = viewModelScope.launch(Dispatchers.IO) {
+    fun stopPlayback() {
         isPlaying.set(false)
         playAudio.stopPlayBack()
         clockTimer.resetTimerVariables()
@@ -209,14 +202,14 @@ class RecordViewModel(val app: Application) : ViewModel(),
         isPlaybackPause.set(false)
     }
 
+    fun clearNotification() = viewModelScope.launch(Dispatchers.IO) {
+        NotificationUtils.clearNotifications(app)
+    }
+
     private fun checkIfRecordWasPaused() = viewModelScope.launch(Dispatchers.IO) {
         if (isPlaying.get()) {
             stopPlayback()
             isPlaying.set(false)
-        } else {
-            if (isRecordingPause.get().not()) {
-                stopPlayback()
-            }
         }
     }
 
@@ -341,10 +334,11 @@ class RecordViewModel(val app: Application) : ViewModel(),
 
             //70 %
             listener.onSetProgressDone(70)
+            val fileExtension = if (fileMp3.extension.contains("mp3")) "mp3" else "m4a"
             val saveFileAudio = AudioFileData(
                 id = Date().time,
                 uri = null,
-                name = "$fileName.mp3",
+                name = "$fileName.$fileExtension",
                 duration = playAudio.getDurationPlayback(fileMp3.path),
                 sizeFile = getFileSizeCurrentRecording(fileMp3),
                 date = timeStamp ?: Date(),
@@ -368,7 +362,6 @@ class RecordViewModel(val app: Application) : ViewModel(),
     }
 
     fun onCancelSave() {
-        Log.d(TAG, "onCancelSave")
         startRecording.set(false)
     }
 
@@ -494,8 +487,8 @@ class RecordViewModel(val app: Application) : ViewModel(),
         val downloadFolder = app.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
         downloadFolder?.listFiles()?.iterator()?.forEachRemaining { file ->
             file?.let {
-                if (it.name.contains(MP3)) {
-                    it.delete()
+                when {
+                    it.name.contains(MP3) || it.name.contains(M4A) -> it.delete()
                 }
             }
         }
@@ -524,8 +517,14 @@ class RecordViewModel(val app: Application) : ViewModel(),
             RecordSettingsOption.Filter.MP3_MEDIUM_HIGH -> RecordSettings(RecordType.MP3_MEDIUM_HIGH)
             RecordSettingsOption.Filter.MP3_HIGH -> RecordSettings(RecordType.MP3_HIGH)
             RecordSettingsOption.Filter.MP3_HIGHEST -> RecordSettings(RecordType.MP3_HIGHEST)
-            RecordSettingsOption.Filter.UNRECOGNIZED -> RecordSettings(RecordType.MP3_MEDIUM)
-            else -> RecordSettings(RecordType.MP3_MEDIUM_HIGH)
+            RecordSettingsOption.Filter.M4A_SUPER_LOW -> RecordSettings(RecordType.M4A_SUPER_LOW)
+            RecordSettingsOption.Filter.M4A_LOW -> RecordSettings(RecordType.M4A_LOW)
+            RecordSettingsOption.Filter.M4A_MEDIUM -> RecordSettings(RecordType.M4A_MEDIUM)
+            RecordSettingsOption.Filter.M4A_MEDIUM_HIGH -> RecordSettings(RecordType.M4A_MEDIUM_HIGH)
+            RecordSettingsOption.Filter.M4A_HIGH -> RecordSettings(RecordType.M4A_HIGH)
+            RecordSettingsOption.Filter.M4A_HIGHEST -> RecordSettings(RecordType.M4A_HIGHEST)
+            RecordSettingsOption.Filter.UNRECOGNIZED -> RecordSettings(RecordType.M4A_MEDIUM)
+            else -> RecordSettings(RecordType.M4A_MEDIUM_HIGH)
         }
     }
 
@@ -544,6 +543,7 @@ class RecordViewModel(val app: Application) : ViewModel(),
         private const val HALF_SECOND = 400L
         private const val ONE_HOUR_IN_SECS = 3600
         private const val MP3 = ".mp3"
+        private const val M4A = ".m4a"
         private const val AUDIO_MIME_TYPE = "audio/mpeg"
     }
 
