@@ -87,20 +87,20 @@ class PlayAudio(val app: Application) : PlayRecording, StopPlayback {
         stopPlayBack()
     }
 
-    override fun getDurationPlayback(pathToFile: String): String {
-        var duration: String? = null
+    override fun getDurationPlayback(pathToFile: String): Int {
+        var duration = 0
         player = MediaPlayer().apply {
             try {
                 setDataSource(pathToFile)
                 prepare()
-                duration = timeInString(seconds)
+                duration = seconds
             } catch (e: IOException) {
                 Log.e("PlayAudio", "prepare() failed  -> $pathToFile")
             }
         }
         player?.release()
         player = null
-        return "$duration secs" ?: timeInString(0)
+        return duration
     }
 
     override fun playbackFromNotification() {

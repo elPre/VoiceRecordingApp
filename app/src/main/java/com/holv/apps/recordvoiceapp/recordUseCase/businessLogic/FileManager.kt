@@ -25,7 +25,6 @@ class FileManager(val app: Application) : FileLogic {
                 put(MediaStore.Audio.Media.DATA, "$PATH_TO_EXTERNAL_STORAGE${data.name}")
                 put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg")
                 put(MediaStore.Audio.Media.ALBUM, NEW_ALBUM_NAME)
-                put(MediaStore.Audio.Media.DURATION, data.duration)
                 put(MediaStore.Audio.Media.SIZE, data.sizeFile)
                 put(MediaStore.Audio.Media.DATE_ADDED, data.date.time)
             }
@@ -54,7 +53,6 @@ class FileManager(val app: Application) : FileLogic {
                 MediaStore.Audio.Media._ID,
                 MediaStore.Audio.Media.DISPLAY_NAME,
                 MediaStore.Audio.Media.ALBUM,
-                MediaStore.Audio.Media.DURATION,
                 MediaStore.Audio.Media.SIZE,
                 MediaStore.Audio.Media.DATE_ADDED,
                 MediaStore.Audio.Media.DATA
@@ -70,7 +68,6 @@ class FileManager(val app: Application) : FileLogic {
                 val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
                 val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
                 val albumColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
-                val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
                 val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
                 val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
                 val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
@@ -78,7 +75,6 @@ class FileManager(val app: Application) : FileLogic {
                     val id = cursor.getLong(idColumn)
                     val displayName = cursor.getString(nameColumn)
                     val album = cursor.getString(albumColumn)
-                    val duration = cursor.getString(durationColumn)
                     val size = cursor.getString(sizeColumn)
                     val dateAdded = cursor.getLong(dateColumn)
                     val data = cursor.getString(dataColumn)
@@ -92,7 +88,6 @@ class FileManager(val app: Application) : FileLogic {
                             id = id,
                             uri = contentUri,
                             name = displayName,
-                            duration =  duration,
                             sizeFile = size,
                             date = Date(TimeUnit.SECONDS.toMillis(dateAdded.toString().toLong())),
                             albumName = album,

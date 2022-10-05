@@ -43,7 +43,7 @@ interface SeekToSpecificPosition {
 }
 
 interface GetDurationPlayback {
-    fun getDurationPlayback(pathToFile: String) : String
+    fun getDurationPlayback(pathToFile: String) : Int
 }
 
 interface PlaybackFromNotification {

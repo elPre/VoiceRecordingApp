@@ -8,7 +8,7 @@ data class AudioFileData(
     val id: Long,
     val uri: Uri ? = null,
     val name: String,
-    val duration: String,
+    val duration: Int ? = null,
     val sizeFile: String,
     val date: Date,
     val fileAudio: File? = null,
