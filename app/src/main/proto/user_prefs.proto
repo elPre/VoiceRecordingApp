@@ -20,6 +20,6 @@ message RecordSettingsOption {
       M4A_HIGHEST = 11;
   }
 
-  Filter filter = 3;
+  Filter filter = 9;
 
 }

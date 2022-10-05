@@ -85,7 +85,7 @@ class RecordViewModel(val app: Application) : ViewModel(),
         }
     }
 
-    private fun load() {
+    private fun load() = viewModelScope.launch(Dispatchers.IO) {
         list.add(TopBanner)
         list.add(LogoAnimation)
         list.add(UserControls)
@@ -372,7 +372,6 @@ class RecordViewModel(val app: Application) : ViewModel(),
                 id = record.id,
                 uri = record.contentUri,
                 sizeFile = record.size,
-                duration = record.duration,
                 name = record.name,
                 date = Date()
             )
@@ -398,12 +397,23 @@ class RecordViewModel(val app: Application) : ViewModel(),
         val listFromMediaStore = fileLogic.queryFiles()
 
         listFromMediaStore.map { audioFileData ->
+            val durationAudio = audioFileData.dataPlayback?.let { playAudio.getDurationPlayback(it) }
+            val labelDuration = when {
+                durationAudio != null -> {
+                    String.format(
+                        "%02d:%02d",
+                        (durationAudio / 3600 * 60 + ((durationAudio % 3600) / 60)),
+                        (durationAudio % 60)
+                    )
+                }
+                else -> "0 secs"
+            }
             listRecordings.add(
                 Records(
                     RecordAudio(
                         name = audioFileData.name,
                         time = audioFileData.date.toString(),
-                        duration = audioFileData.duration,
+                        duration = labelDuration,
                         size = audioFileData.sizeFile,
                         playbackFile = "${audioFileData.dataPlayback}",
                         contentUri = audioFileData.contentUri,
