@@ -1,17 +1,11 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.activities
 
 import android.Manifest
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.ads.MobileAds
 import com.holv.apps.recordvoiceapp.R
 import com.holv.apps.recordvoiceapp.databinding.ActivityMainBinding
@@ -31,10 +25,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             permissions,
             REQUEST_RECORD_AUDIO_PERMISSION
         )
-        Log.d(TAG,"getting the intent ${intent.action}")
         if (savedInstanceState == null && permissionToRecordAccepted) {
-            Log.d(TAG,"brand new fragment")
-            Log.d(TAG,"here ask if the fragment exist put that  one otherwise  create a new  one")
             openFragment(RecordFragment.newInstance(),RecordFragment.TAG)
         }
     }
@@ -72,7 +63,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             false
         }
         if (!permissionToRecordAccepted) {
-            Log.d("MainActivity", "Show a snackbar of a dialog fragment ")
             finish()
         } else {
             openFragment(RecordFragment.newInstance(),RecordFragment.TAG)

@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 
 public class Mp3ClassConverter implements Mp3Converter {
 

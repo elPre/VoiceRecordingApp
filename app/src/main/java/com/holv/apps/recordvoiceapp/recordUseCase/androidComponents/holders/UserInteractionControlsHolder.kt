@@ -1,10 +1,8 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders
 
 import android.app.Activity
-import android.util.Log
 import android.widget.SeekBar
 import androidx.core.view.isVisible
-import com.holv.apps.recordvoiceapp.R
 import com.holv.apps.recordvoiceapp.databinding.UserInteractionInformationHolderBinding
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.UserControls
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.actionEvents.Events

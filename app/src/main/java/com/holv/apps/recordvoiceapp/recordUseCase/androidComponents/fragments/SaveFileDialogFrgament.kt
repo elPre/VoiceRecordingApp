@@ -3,18 +3,11 @@ package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments
 import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.UiThread
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import com.holv.apps.recordvoiceapp.databinding.AskSaveFileDialogFragmentBinding
-import kotlinx.coroutines.*
-import kotlin.coroutines.suspendCoroutine
 
 class SaveFileDialogFragment : BaseBindingDialogFragment<AskSaveFileDialogFragmentBinding>(),
     DialogFragmentListeners {
@@ -55,7 +48,7 @@ class SaveFileDialogFragment : BaseBindingDialogFragment<AskSaveFileDialogFragme
 
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
-        Log.d(TAG,"onCancel do no save file the same  as cancel  or keep the  file")
+        //onCancel do no save file the same  as cancel  or keep the  file
         listenerSaveFile?.onCancelSave()
     }
 

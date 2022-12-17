@@ -1,13 +1,10 @@
 package com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.holders
 
 import android.app.Activity
-import android.os.Looper
 import androidx.core.view.isVisible
 import com.holv.apps.recordvoiceapp.databinding.AnimationHolderBinding
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.LogoAnimation
 import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.adapters.actionEvents.Events
-import com.holv.apps.recordvoiceapp.recordUseCase.androidComponents.fragments.RecordFragment
-import java.util.logging.Handler
 
 class AnimationHolder(
     private val view: AnimationHolderBinding,
